@@ -317,7 +317,7 @@ export default function Home() {
         </main>
 
         <footer className="border-t border-neutral-100 py-8 text-center text-xs text-neutral-300">
-          Design · Product · Dignal · Ai
+          Design · Product · Digital · Ai
         </footer>
       </div>
     </div>
