@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "works-library",
+  "main": "server/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // 前端静态资源：assets 优先；/api/* 与 /media/* 强制走 Worker
+  // not_found_handling 让 /admin、/work/:slug 等页面路由返回 index.html（SPA）
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/media/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "works-db",
+      // 首次真实部署前运行 npx wrangler d1 create works-db，把返回的 id 替换到这里
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "works-media"
+    }
+  ],
+  // pages.dev / 自定义域名均为 HTTPS，cookie 加 secure
+  "vars": {
+    "COOKIE_SECURE": "1"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

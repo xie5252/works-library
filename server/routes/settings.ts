@@ -1,18 +1,17 @@
 import { Hono } from 'hono'
-import { db } from '../db'
+import { qAll, qRun, type Env } from '../db'
 import { requireAuth } from './auth'
 
-const settings = new Hono()
+const settings = new Hono<{ Bindings: Env }>()
 
 const PUBLIC_KEYS = ['logo', 'site_name', 'site_name_en', 'footer_text']
 
 // 公开接口：前台读取 Logo、网站名称、英文副标题、版权署名
-settings.get('/settings', (c) => {
-  const rows = db
-    .prepare(
-      `SELECT key, value FROM settings WHERE key IN ('logo','site_name','site_name_en','footer_text')`,
-    )
-    .all() as { key: string; value: string }[]
+settings.get('/settings', async (c) => {
+  const rows = await qAll<{ key: string; value: string }>(
+    c.env.DB,
+    `SELECT key, value FROM settings WHERE key IN ('logo','site_name','site_name_en','footer_text')`,
+  )
   const obj: Record<string, string> = {}
   for (const r of rows) obj[r.key] = r.value
   return c.json({
@@ -33,10 +32,13 @@ settings.put('/settings', requireAuth, async (c) => {
   for (const key of PUBLIC_KEYS) {
     const value = body[key as keyof typeof body]
     if (value !== undefined) {
-      db.prepare(
+      await qRun(
+        c.env.DB,
         `INSERT INTO settings (key, value) VALUES (?, ?)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value`,
-      ).run(key, value)
+        key,
+        value,
+      )
     }
   }
   return c.json({ ok: true })

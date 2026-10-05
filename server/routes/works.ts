@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
-import { db, now, type WorkRow } from '../db'
+import { qAll, qGet, qRun, now, type WorkRow, type Env } from '../db'
 import { requireAuth } from './auth'
 
-const works = new Hono()
+const works = new Hono<{ Bindings: Env }>()
 
 export function parseRow(r: WorkRow) {
   let content: unknown = []
@@ -52,7 +52,7 @@ const SEARCH_SQL =
 
 // ---------- 前台接口（仅 published） ----------
 
-works.get('/works', (c) => {
+works.get('/works', async (c) => {
   const { category, q, featured } = c.req.query()
   let sql = "SELECT * FROM works WHERE status='published' AND deleted_at IS NULL"
   const params: string[] = []
@@ -71,23 +71,23 @@ works.get('/works', (c) => {
   }
   // 精选置顶：featured_order 小者在前，非精选按时间
   sql += ' ORDER BY (featured_order IS NULL), featured_order ASC, updated_at DESC'
-  const rows = db.prepare(sql).all(...params) as WorkRow[]
+  const rows = await qAll<WorkRow>(c.env.DB, sql, ...params)
   return c.json(rows.map(parseRow))
 })
 
-works.get('/works/:slug', (c) => {
-  const r = db
-    .prepare(
-      "SELECT * FROM works WHERE slug=? AND status='published' AND deleted_at IS NULL",
-    )
-    .get(c.req.param('slug')) as WorkRow | undefined
+works.get('/works/:slug', async (c) => {
+  const r = await qGet<WorkRow>(
+    c.env.DB,
+    "SELECT * FROM works WHERE slug=? AND status='published' AND deleted_at IS NULL",
+    c.req.param('slug'),
+  )
   if (!r) return c.json({ error: '作品不存在' }, 404)
   return c.json(parseRow(r))
 })
 
 // ---------- 后台接口（含草稿） ----------
 
-works.get('/admin/works', requireAuth, (c) => {
+works.get('/admin/works', requireAuth, async (c) => {
   const { q } = c.req.query()
   let sql = 'SELECT * FROM works WHERE deleted_at IS NULL'
   const params: string[] = []
@@ -97,14 +97,16 @@ works.get('/admin/works', requireAuth, (c) => {
     params.push(like, like, like, like, like)
   }
   sql += ' ORDER BY updated_at DESC'
-  const rows = db.prepare(sql).all(...params) as WorkRow[]
+  const rows = await qAll<WorkRow>(c.env.DB, sql, ...params)
   return c.json(rows.map(parseRow))
 })
 
-works.get('/admin/works/:id', requireAuth, (c) => {
-  const r = db
-    .prepare('SELECT * FROM works WHERE id=? AND deleted_at IS NULL')
-    .get(c.req.param('id')) as WorkRow | undefined
+works.get('/admin/works/:id', requireAuth, async (c) => {
+  const r = await qGet<WorkRow>(
+    c.env.DB,
+    'SELECT * FROM works WHERE id=? AND deleted_at IS NULL',
+    c.req.param('id'),
+  )
   if (!r) return c.json({ error: '作品不存在' }, 404)
   return c.json(parseRow(r))
 })
@@ -149,35 +151,35 @@ works.post('/admin/works', requireAuth, async (c) => {
   const body = await c.req.json<WorkInput>()
   const t = now()
   const cats = normalizeCategories(body.categories ?? body.category, body.category || '其他')
-  const info = db
-    .prepare(
-      `INSERT INTO works (title, slug, category, categories, tags, cover, cover_source, content, status, featured_order, bg_theme, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
-      body.title?.trim() || '未命名作品',
-      genSlug(),
-      cats.category,
-      cats.categories,
-      normalizeTags(body.tags),
-      body.cover ?? null,
-      body.cover ? body.cover_source ?? null : null,
-      JSON.stringify(body.content ?? []),
-      body.status === 'published' ? 'published' : 'draft',
-      typeof body.featured_order === 'number' ? body.featured_order : null,
-      body.bg_theme === 'dark' ? 'dark' : 'light',
-      t,
-      t,
-    )
-  const r = db.prepare('SELECT * FROM works WHERE id=?').get(info.lastInsertRowid) as WorkRow
-  return c.json(parseRow(r), 201)
+  const info = await qRun(
+    c.env.DB,
+    `INSERT INTO works (title, slug, category, categories, tags, cover, cover_source, content, status, featured_order, bg_theme, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    body.title?.trim() || '未命名作品',
+    genSlug(),
+    cats.category,
+    cats.categories,
+    normalizeTags(body.tags),
+    body.cover ?? null,
+    body.cover ? body.cover_source ?? null : null,
+    JSON.stringify(body.content ?? []),
+    body.status === 'published' ? 'published' : 'draft',
+    typeof body.featured_order === 'number' ? body.featured_order : null,
+    body.bg_theme === 'dark' ? 'dark' : 'light',
+    t,
+    t,
+  )
+  const r = await qGet<WorkRow>(c.env.DB, 'SELECT * FROM works WHERE id=?', info.meta.last_row_id)
+  return c.json(parseRow(r as WorkRow), 201)
 })
 
 works.put('/admin/works/:id', requireAuth, async (c) => {
   const id = c.req.param('id')
-  const existing = db
-    .prepare('SELECT * FROM works WHERE id=? AND deleted_at IS NULL')
-    .get(id) as WorkRow | undefined
+  const existing = await qGet<WorkRow>(
+    c.env.DB,
+    'SELECT * FROM works WHERE id=? AND deleted_at IS NULL',
+    id,
+  )
   if (!existing) return c.json({ error: '作品不存在' }, 404)
   const body = await c.req.json<WorkInput>()
   const cats =
@@ -194,9 +196,9 @@ works.put('/admin/works/:id', requireAuth, async (c) => {
     : body.cover_source === undefined
       ? existing.cover_source
       : body.cover_source || null
-  db.prepare(
+  await qRun(
+    c.env.DB,
     `UPDATE works SET title=?, category=?, categories=?, tags=?, cover=?, cover_source=?, content=?, status=?, featured_order=?, bg_theme=?, updated_at=? WHERE id=?`,
-  ).run(
     body.title?.trim() || existing.title,
     cats.category,
     cats.categories,
@@ -214,48 +216,56 @@ works.put('/admin/works/:id', requireAuth, async (c) => {
     now(),
     id,
   )
-  const r = db.prepare('SELECT * FROM works WHERE id=?').get(id) as WorkRow
-  return c.json(parseRow(r))
+  const r = await qGet<WorkRow>(c.env.DB, 'SELECT * FROM works WHERE id=?', id)
+  return c.json(parseRow(r as WorkRow))
 })
 
 // ---------- 回收站 ----------
 
 // 已删除列表（最新删除在前）
-works.get('/admin/works-deleted', requireAuth, (c) => {
-  const rows = db
-    .prepare(
-      'SELECT * FROM works WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC',
-    )
-    .all() as WorkRow[]
+works.get('/admin/works-deleted', requireAuth, async (c) => {
+  const rows = await qAll<WorkRow>(
+    c.env.DB,
+    'SELECT * FROM works WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC',
+  )
   return c.json(rows.map(parseRow))
 })
 
 // 恢复（必须在 /admin/works/:id 之前注册）
-works.put('/admin/works/:id/restore', requireAuth, (c) => {
-  const info = db
-    .prepare('UPDATE works SET deleted_at=NULL, updated_at=? WHERE id=? AND deleted_at IS NOT NULL')
-    .run(now(), c.req.param('id'))
-  if (info.changes === 0) return c.json({ error: '作品不存在或未删除' }, 404)
-  const r = db.prepare('SELECT * FROM works WHERE id=?').get(c.req.param('id')) as WorkRow
-  return c.json(parseRow(r))
+works.put('/admin/works/:id/restore', requireAuth, async (c) => {
+  const info = await qRun(
+    c.env.DB,
+    'UPDATE works SET deleted_at=NULL, updated_at=? WHERE id=? AND deleted_at IS NOT NULL',
+    now(),
+    c.req.param('id'),
+  )
+  if (info.meta.changes === 0) return c.json({ error: '作品不存在或未删除' }, 404)
+  const r = await qGet<WorkRow>(c.env.DB, 'SELECT * FROM works WHERE id=?', c.req.param('id'))
+  return c.json(parseRow(r as WorkRow))
 })
 
-// 彻底删除（不可恢复；不删 media 文件，可能被其他作品引用）
-works.delete('/admin/works/:id/purge', requireAuth, (c) => {
-  const info = db
-    .prepare('DELETE FROM works WHERE id=? AND deleted_at IS NOT NULL')
-    .run(c.req.param('id'))
-  if (info.changes === 0) return c.json({ error: '作品不存在或未删除' }, 404)
+// 彻底删除（不可恢复；不删 R2 文件，可能被其他作品引用）
+works.delete('/admin/works/:id/purge', requireAuth, async (c) => {
+  const info = await qRun(
+    c.env.DB,
+    'DELETE FROM works WHERE id=? AND deleted_at IS NOT NULL',
+    c.req.param('id'),
+  )
+  if (info.meta.changes === 0) return c.json({ error: '作品不存在或未删除' }, 404)
   return c.json({ ok: true })
 })
 
 // 软删除：deleted_at 标记，可恢复
-works.delete('/admin/works/:id', requireAuth, (c) => {
+works.delete('/admin/works/:id', requireAuth, async (c) => {
   const id = c.req.param('id')
-  const info = db
-    .prepare('UPDATE works SET deleted_at=?, updated_at=? WHERE id=? AND deleted_at IS NULL')
-    .run(now(), now(), id)
-  if (info.changes === 0) return c.json({ error: '作品不存在' }, 404)
+  const info = await qRun(
+    c.env.DB,
+    'UPDATE works SET deleted_at=?, updated_at=? WHERE id=? AND deleted_at IS NULL',
+    now(),
+    now(),
+    id,
+  )
+  if (info.meta.changes === 0) return c.json({ error: '作品不存在' }, 404)
   return c.json({ ok: true })
 })
 

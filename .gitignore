@@ -2,5 +2,7 @@ node_modules/
 dist/
 data/
 media/
+.wrangler/
+.dev.vars
 .DS_Store
 *.local

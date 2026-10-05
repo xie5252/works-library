@@ -1,16 +1,15 @@
 import { Hono } from 'hono'
 import { requireAuth } from './auth'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { randomBytes } from 'node:crypto'
-import { join } from 'node:path'
+import type { Env } from '../db'
 
-const upload = new Hono()
+const upload = new Hono<{ Bindings: Env }>()
 
+// 视频上限 95MB：Workers 免费版单请求体上限 100MB
 const RULES: Record<string, { dir: string; exts: string[]; maxMB: number }> = {
   logo: { dir: 'logo', exts: ['png', 'jpg', 'jpeg', 'webp', 'svg'], maxMB: 5 },
   cover: { dir: 'covers', exts: ['png', 'jpg', 'jpeg', 'webp'], maxMB: 20 },
   image: { dir: 'images', exts: ['png', 'jpg', 'jpeg', 'webp'], maxMB: 20 },
-  video: { dir: 'videos', exts: ['mp4', 'webm'], maxMB: 200 },
+  video: { dir: 'videos', exts: ['mp4', 'webm'], maxMB: 95 },
   pdf: { dir: 'pdfs', exts: ['pdf'], maxMB: 50 },
 }
 
@@ -31,12 +30,15 @@ upload.post('/upload', requireAuth, async (c) => {
     return c.json({ error: `文件过大，最大 ${rule.maxMB}MB` }, 400)
   }
 
-  const name = `${Date.now().toString(36)}-${randomBytes(4).toString('hex')}.${ext}`
-  const dir = join(process.cwd(), 'media', rule.dir)
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, name), Buffer.from(await file.arrayBuffer()))
+  // R2 对象 key = 分类目录/随机文件名；文件名随机不可枚举
+  const name = `${Date.now().toString(36)}-${crypto.getRandomValues(new Uint8Array(4)).join('')}.${ext}`
+  const key = `${rule.dir}/${name}`
+  // 用 ArrayBuffer（长度已知）；本地 miniflare R2 不接受不定长 stream
+  await c.env.MEDIA.put(key, await file.arrayBuffer(), {
+    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+  })
 
-  return c.json({ url: `/media/${rule.dir}/${name}` })
+  return c.json({ url: `/media/${key}` })
 })
 
 export const uploadRoutes = upload

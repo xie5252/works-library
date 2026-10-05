@@ -1,70 +1,42 @@
-import Database from 'better-sqlite3'
-import { mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+// Cloudflare D1 数据层：SQL 与本地版完全一致（纯 SQLite 语法），
+// 区别仅在于 D1 是异步绑定。路由统一通过 qAll/qGet/qRun 访问。
+import type { Context } from 'hono'
 
-const DATA_DIR = join(process.cwd(), 'data')
-mkdirSync(DATA_DIR, { recursive: true })
-
-export const db = new Database(join(DATA_DIR, 'works.db'))
-db.pragma('journal_mode = WAL')
-
-// 表结构与将来 Cloudflare D1 兼容（纯 SQLite 语法）
-db.exec(`
-CREATE TABLE IF NOT EXISTS works (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  category TEXT NOT NULL DEFAULT '其他',
-  cover TEXT,
-  content TEXT NOT NULL DEFAULT '[]',
-  status TEXT NOT NULL DEFAULT 'draft',
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  deleted_at TEXT
-);
-CREATE TABLE IF NOT EXISTS settings (
-  key TEXT PRIMARY KEY,
-  value TEXT
-);
-CREATE TABLE IF NOT EXISTS categories (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  sort INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL
-);
-`)
-
-// 首次启动预置默认分类
-const catCount = (db.prepare('SELECT COUNT(*) c FROM categories').get() as { c: number }).c
-if (catCount === 0) {
-  const ins = db.prepare('INSERT INTO categories (name, sort, created_at) VALUES (?, ?, ?)')
-  const t = now()
-  ;['设计', '摄影', '视频', 'AI应用', '数字化', '其他'].forEach((name, i) =>
-    ins.run(name, i + 1, t),
-  )
+export interface Env {
+  DB: D1Database
+  MEDIA: R2Bucket
+  SECRET: string
+  COOKIE_SECURE?: string
 }
 
-// 旧库迁移：补 featured_order（精选置顶顺序，NULL=非精选，数字越小越靠前）
-const workCols = db.pragma('table_info(works)') as { name: string }[]
-if (!workCols.some((c) => c.name === 'featured_order')) {
-  db.exec('ALTER TABLE works ADD COLUMN featured_order INTEGER')
+export type AppContext = Context<{ Bindings: Env }>
+
+export async function qAll<T = Record<string, unknown>>(
+  db: D1Database,
+  sql: string,
+  ...params: unknown[]
+): Promise<T[]> {
+  const stmt = params.length > 0 ? db.prepare(sql).bind(...params) : db.prepare(sql)
+  const r = await stmt.all()
+  return r.results as T[]
 }
-// 旧库迁移：补 categories（多分类 JSON 数组，如 '["设计","视频"]'；旧数据按原 category 初始化）
-if (!workCols.some((c) => c.name === 'categories')) {
-  db.exec("ALTER TABLE works ADD COLUMN categories TEXT NOT NULL DEFAULT '[]'")
-  db.exec("UPDATE works SET categories = JSON_ARRAY(category) WHERE categories = '[]'")
+
+export async function qGet<T = Record<string, unknown>>(
+  db: D1Database,
+  sql: string,
+  ...params: unknown[]
+): Promise<T | null> {
+  const stmt = params.length > 0 ? db.prepare(sql).bind(...params) : db.prepare(sql)
+  return (await stmt.first()) as T | null
 }
-// 旧库迁移：补 bg_theme（详情页背景主题：light=典雅白 / dark=高端黑）
-if (!workCols.some((c) => c.name === 'bg_theme')) {
-  db.exec("ALTER TABLE works ADD COLUMN bg_theme TEXT NOT NULL DEFAULT 'light'")
-}
-// 旧库迁移：补 tags（自定义标签 JSON 数组，如 '["茶饼","包装"]'）
-if (!workCols.some((c) => c.name === 'tags')) {
-  db.exec("ALTER TABLE works ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
-}
-// 旧库迁移：补 cover_source（封面来源：封面从正文某图裁剪时记录该图 URL，详情页避免重复展示）
-if (!workCols.some((c) => c.name === 'cover_source')) {
-  db.exec('ALTER TABLE works ADD COLUMN cover_source TEXT')
+
+export async function qRun(
+  db: D1Database,
+  sql: string,
+  ...params: unknown[]
+): Promise<D1Result> {
+  const stmt = params.length > 0 ? db.prepare(sql).bind(...params) : db.prepare(sql)
+  return stmt.run()
 }
 
 export interface WorkRow {
