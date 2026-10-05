@@ -1,29 +1,21 @@
 import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { api } from '../api'
 import type { SiteSettings } from '../types'
 import { ToastContainer, useToasts } from './Toast'
 import AdminNoindex from './AdminNoindex'
 
-export async function checkSession(): Promise<boolean> {
-  try {
-    const res = await api<{ logged_in: boolean }>('/api/admin/session')
-    return res.logged_in
-  } catch {
-    return false
-  }
-}
-
-interface Props {
-  children: ReactNode
-  active?: 'works' | 'settings' | 'trash'
-}
-
-export default function AdminLayout({ children, active }: Props) {
+export default function AdminLayout() {
   const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '' })
   const navigate = useNavigate()
+  const location = useLocation()
   const { items, show } = useToasts()
+
+  const active: 'works' | 'settings' | 'trash' = location.pathname.startsWith('/admin/trash')
+    ? 'trash'
+    : location.pathname.startsWith('/admin/settings')
+      ? 'settings'
+      : 'works'
 
   useEffect(() => {
     api<SiteSettings>('/api/admin/settings').then(setSettings).catch(() => {})
@@ -91,7 +83,7 @@ export default function AdminLayout({ children, active }: Props) {
           </button>
         </div>
       </header>
-      {children}
+      <Outlet />
     </div>
   )
 }

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import AdminLayout, { checkSession } from '../components/AdminLayout'
 import BlockList from '../components/BlockList'
 import { api, jsonRequest, uploadFile } from '../api'
 import type { Work, WorkStatus, Category } from '../types'
@@ -48,12 +47,6 @@ export default function AdminWorkEdit() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const coverRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    checkSession().then((ok) => {
-      if (!ok) navigate('/admin/login', { replace: true })
-    })
-  }, [navigate])
 
   useEffect(() => {
     api<Category[]>('/api/categories')
@@ -156,9 +149,7 @@ export default function AdminWorkEdit() {
 
   if (!ready) {
     return (
-      <AdminLayout active="works">
-        <div className="py-40 text-center text-neutral-300 text-sm">加载中……</div>
-      </AdminLayout>
+      <div className="py-40 text-center text-neutral-300 text-sm">加载中……</div>
     )
   }
 
@@ -172,7 +163,7 @@ export default function AdminWorkEdit() {
           : ''
 
   return (
-    <AdminLayout active="works">
+    <>
       <ToastContainer items={items} />
       <div className="sticky top-14 z-30 bg-white/95 backdrop-blur border-b border-neutral-200">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-14 flex items-center gap-3">
@@ -438,6 +429,6 @@ export default function AdminWorkEdit() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </>
   )
 }

@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import AdminLayout, { checkSession } from '../components/AdminLayout'
 import CategoryManager from '../components/CategoryManager'
 import { api, jsonRequest, uploadFile } from '../api'
 import { ToastContainer, useToasts } from '../components/Toast'
 
 export default function AdminSettings() {
-  const navigate = useNavigate()
   const { items, show } = useToasts()
-  const [ready, setReady] = useState(false)
   const [logo, setLogo] = useState<string | null>(null)
   const [siteName, setSiteName] = useState('作品库')
   const [siteNameEn, setSiteNameEn] = useState('')
@@ -16,14 +12,6 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    checkSession().then((ok) => {
-      if (!ok) navigate('/admin/login', { replace: true })
-      else setReady(true)
-    })
-  }, [navigate])
-
-  useEffect(() => {
-    if (!ready) return
     api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string }>(
       '/api/admin/settings',
     )
@@ -34,7 +22,7 @@ export default function AdminSettings() {
         setFooterText(s.footer_text || '')
       })
       .catch(() => {})
-  }, [ready])
+  }, [])
 
   const changeLogo = async (file: File) => {
     try {
@@ -67,10 +55,8 @@ export default function AdminSettings() {
     }
   }
 
-  if (!ready) return null
-
   return (
-    <AdminLayout active="settings">
+    <>
       <ToastContainer items={items} />
       <main className="max-w-2xl mx-auto px-5 sm:px-8 py-8 space-y-8">
         <div>
@@ -175,6 +161,6 @@ export default function AdminSettings() {
           <CategoryManager onToast={(m, k) => show(m, k)} />
         </div>
       </main>
-    </AdminLayout>
+    </>
   )
 }

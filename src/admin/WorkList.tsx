@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import AdminLayout, { checkSession } from '../components/AdminLayout'
+import { Link } from 'react-router-dom'
 import { api, jsonRequest } from '../api'
 import type { Work } from '../types'
 import { formatDateTime, coverOf } from '../components/format'
@@ -19,20 +18,11 @@ export default function AdminWorkList() {
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('全部')
-  const [checking, setChecking] = useState(true)
   const [view, setView] = useState<'list' | 'grid'>(() =>
     localStorage.getItem('admin_work_view') === 'grid' ? 'grid' : 'list',
   )
-  const navigate = useNavigate()
   const { items, show } = useToasts()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    checkSession().then((ok) => {
-      if (!ok) navigate('/admin/login', { replace: true })
-      else setChecking(false)
-    })
-  }, [navigate])
 
   const load = useCallback((keyword: string) => {
     const sp = new URLSearchParams()
@@ -45,13 +35,12 @@ export default function AdminWorkList() {
   }, [])
 
   useEffect(() => {
-    if (checking) return
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => load(q), 300)
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [q, checking, load])
+  }, [q, load])
 
   const remove = async (w: Work) => {
     if (!window.confirm('确定删除「' + w.title + '」？前台将不再显示，数据可恢复。')) return
@@ -79,8 +68,6 @@ export default function AdminWorkList() {
       show(err instanceof Error ? err.message : '操作失败', 'error')
     }
   }
-
-  if (checking) return null
 
   // 分类筛选（前端过滤）
   const filtered =
@@ -113,7 +100,7 @@ export default function AdminWorkList() {
       : works.filter((w) => (w.categories || []).includes(c) || w.category === c).length
 
   return (
-    <AdminLayout active="works">
+    <>
       <ToastContainer items={items} />
       <main className="max-w-6xl mx-auto px-5 sm:px-8 py-8">
         <div className="flex items-center justify-between gap-4">
@@ -245,7 +232,7 @@ export default function AdminWorkList() {
           </div>
         )}
       </main>
-    </AdminLayout>
+    </>
   )
 }
 

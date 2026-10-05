@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import AdminLayout, { checkSession } from '../components/AdminLayout'
 import { api, jsonRequest } from '../api'
 import type { Work } from '../types'
 import { formatDateTime, coverOf } from '../components/format'
@@ -10,16 +8,7 @@ import { ToastContainer, useToasts } from '../components/Toast'
 export default function AdminTrash() {
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
-  const [checking, setChecking] = useState(true)
-  const navigate = useNavigate()
   const { items, show } = useToasts()
-
-  useEffect(() => {
-    checkSession().then((ok) => {
-      if (!ok) navigate('/admin/login', { replace: true })
-      else setChecking(false)
-    })
-  }, [navigate])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -30,8 +19,8 @@ export default function AdminTrash() {
   }, [])
 
   useEffect(() => {
-    if (!checking) load()
-  }, [checking, load])
+    load()
+  }, [load])
 
   const restore = async (w: Work) => {
     try {
@@ -54,10 +43,8 @@ export default function AdminTrash() {
     }
   }
 
-  if (checking) return null
-
   return (
-    <AdminLayout active="trash">
+    <>
       <ToastContainer items={items} />
       <main className="max-w-6xl mx-auto px-5 sm:px-8 py-8">
         <h1 className="text-2xl font-bold tracking-tight">回收站</h1>
@@ -106,6 +93,6 @@ export default function AdminTrash() {
           )}
         </div>
       </main>
-    </AdminLayout>
+    </>
   )
 }

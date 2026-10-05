@@ -317,7 +317,7 @@ export default function Home() {
         </main>
 
         <footer className="border-t border-neutral-100 py-8 text-center text-xs text-neutral-300">
-          {settings.site_name} · 用作品记录时间
+          Design · Product · Dignal · Ai
         </footer>
       </div>
     </div>
