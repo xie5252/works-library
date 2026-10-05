@@ -1,0 +1,3 @@
+# Front-end pages are allowed to be indexed; /admin is forbidden.
+User-agent: *
+Disallow: /admin
