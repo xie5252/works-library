@@ -66,6 +66,7 @@ export interface SiteSettings {
   site_name: string
   site_name_en: string
   footer_text: string
+  footer_credit: string
 }
 
 export interface Category {

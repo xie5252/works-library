@@ -9,10 +9,11 @@ export default function AdminSettings() {
   const [siteName, setSiteName] = useState('作品库')
   const [siteNameEn, setSiteNameEn] = useState('')
   const [footerText, setFooterText] = useState('')
+  const [footerCredit, setFooterCredit] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string }>(
+    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string; footer_credit?: string }>(
       '/api/admin/settings',
     )
       .then((s) => {
@@ -20,6 +21,7 @@ export default function AdminSettings() {
         setSiteName(s.site_name)
         setSiteNameEn(s.site_name_en || '')
         setFooterText(s.footer_text || '')
+        setFooterCredit(s.footer_credit || '')
       })
       .catch(() => {})
   }, [])
@@ -45,6 +47,7 @@ export default function AdminSettings() {
           site_name: siteName.trim() || '作品库',
           site_name_en: siteNameEn.trim(),
           footer_text: footerText.trim(),
+          footer_credit: footerCredit.trim(),
         }),
       )
       show('设置已保存，前台已生效')
@@ -145,6 +148,20 @@ export default function AdminSettings() {
             />
             <p className="text-xs text-neutral-400 mt-2">
               显示在前台侧边栏底部，如「© 2026 Designed by 谢某某」；留空则显示 © 年份 + 站名
+            </p>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-neutral-700 mb-3">页脚文字</h3>
+            <input
+              value={footerCredit}
+              onChange={(e) => setFooterCredit(e.target.value)}
+              placeholder="Design · Product · Digital · Ai"
+              maxLength={60}
+              className="w-full sm:w-80 h-11 px-4 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+            />
+            <p className="text-xs text-neutral-400 mt-2">
+              显示在前台页面最底部；留空则显示默认的 Design · Product · Digital · Ai
             </p>
           </section>
 

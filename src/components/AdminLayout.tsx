@@ -6,7 +6,7 @@ import { ToastContainer, useToasts } from './Toast'
 import AdminNoindex from './AdminNoindex'
 
 export default function AdminLayout() {
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '' })
   const navigate = useNavigate()
   const location = useLocation()
   const { items, show } = useToasts()

@@ -128,7 +128,7 @@ export default function WorkDetail() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const [work, setWork] = useState<Work | null>(null)
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '' })
   const [cats, setCats] = useState<string[]>([])
   const [selCat, setSelCat] = useState('__featured')
   const [more, setMore] = useState<Work[]>([])

@@ -9,7 +9,7 @@ import CategoryIcon from '../components/CategoryIcon'
 const SIDEBAR_KEY = 'worklib_sidebar_open'
 
 export default function Home() {
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '' })
   const footerText = settings.footer_text
   const [cats, setCats] = useState<string[]>(FALLBACK_CATEGORIES)
   const [works, setWorks] = useState<Work[]>([])
@@ -317,7 +317,7 @@ export default function Home() {
         </main>
 
         <footer className="border-t border-neutral-100 py-8 text-center text-xs text-neutral-300">
-          Design · Product · Digital · Ai
+          {settings.footer_credit || 'Design · Product · Digital · Ai'}
         </footer>
       </div>
     </div>
