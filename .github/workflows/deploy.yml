@@ -1,0 +1,31 @@
+# push 到 main 自动构建并部署到 Cloudflare Workers
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 允许在 GitHub 页面手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci --ignore-scripts
+
+      - name: 构建
+        run: npm run build
+
+      - name: 部署到 Cloudflare（需配置 CLOUDFLARE_API_TOKEN 仓库密钥）
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: dc054424f11867ed5c935d62e7570fc6
+        run: npx wrangler deploy
