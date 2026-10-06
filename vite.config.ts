@@ -29,23 +29,27 @@ const blockSensitivePaths: Plugin = {
   },
 }
 
-export default defineConfig({
+export default defineConfig(async ({ command }) => ({
   plugins: [
     blockSensitivePaths,
     react(),
     tailwindcss(),
-    devServer({
-      entry: 'server/worker.ts',
-      // Cloudflare 适配器：本地通过 getPlatformProxy 提供 D1 / R2 绑定（与线上一致）
-      adapter: await cloudflareAdapter(),
-      // 只把 API 和媒体文件交给 Hono，其余（页面路由）走 Vite SPA
-      exclude: [/^(?!\/api\/|\/media\/).*/],
-    }),
-  ],
+    // 仅 dev 模式加载 Hono dev server（内含 getPlatformProxy/workerd），
+    // vite build 不启动模拟器，保证 CI 构建干净利落
+    command === 'serve'
+      ? devServer({
+          entry: 'server/worker.ts',
+          // Cloudflare 适配器：本地通过 getPlatformProxy 提供 D1 / R2 绑定（与线上一致）
+          adapter: await cloudflareAdapter(),
+          // 只把 API 和媒体文件交给 Hono，其余（页面路由）走 Vite SPA
+          exclude: [/^(?!\/api\/|\/media\/).*/],
+        })
+      : null,
+  ].filter(Boolean) as Plugin[],
   server: {
     port: 5173,
     fs: {
       deny: ['data/**', '**/.env*', '**/.dev.vars'],
     },
   },
-})
+}))
