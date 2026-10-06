@@ -23,8 +23,7 @@ jobs:
       - name: 构建
         run: npm run build
 
-      - name: 部署到 Cloudflare（需配置 CLOUDFLARE_API_TOKEN 仓库密钥）
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+      - name: 部署到 Cloudflare（CLOUDFLARE_API_TOKEN 已配置为仓库密钥）
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: dc054424f11867ed5c935d62e7570fc6
