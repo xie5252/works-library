@@ -15,10 +15,10 @@
     {
       "binding": "DB",
       "database_name": "works-db",
-      // 首次真实部署前运行 npx wrangler d1 create works-db，把返回的 id 替换到这里
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "221f88dd-bf54-4e67-9942-81f0de956ec3"
     }
   ],
+  // 媒体存 R2（免费 10GB，零出口流量费）
   "r2_buckets": [
     {
       "binding": "MEDIA",

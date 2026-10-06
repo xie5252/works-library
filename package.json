@@ -10,8 +10,8 @@
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "migrate:d1": "node scripts/migrate-to-d1.mjs",
-    "seed:r2": "node scripts/seed-local-r2.mjs",
-    "set-password": "node scripts/set-password.mjs"
+    "set-password": "node scripts/set-password.mjs",
+    "seed:media": "node scripts/seed-media.mjs"
   },
   "dependencies": {
     "@hono/vite-dev-server": "^0.26.1",
