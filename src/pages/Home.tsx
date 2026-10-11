@@ -68,6 +68,58 @@ export default function Home() {
     })
   }
 
+  // 精选（后台星标 featured_order）与常规作品分组：仅首页默认视图分区，筛选/搜索时平铺
+  const featuredWorks = works.filter((w) => w.featured_order != null)
+  const restWorks = works.filter((w) => w.featured_order == null)
+  const showSections = !category && !q && featuredWorks.length > 0
+  const gridCls = 'grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5 px-px'
+
+  const card = (w: Work, i: number) => (
+    <Link
+      key={w.id}
+      to={'/work/' + w.slug}
+      className="card-in block group"
+      style={{ animationDelay: Math.min(i * 40, 320) + 'ms' }}
+    >
+      <div className="rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 relative">
+        {coverOf(w) ? (
+          <div className="aspect-[4/3] overflow-hidden">
+            <img
+              src={coverOf(w) || undefined}
+              alt={w.title}
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            />
+          </div>
+        ) : (
+          <div className="aspect-[4/3] flex items-center justify-center">
+            <span className="text-neutral-300 text-4xl font-bold tracking-widest">
+              {w.title.slice(0, 1)}
+            </span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+      </div>
+      <div className="pt-2 sm:pt-3 pb-1 px-0.5">
+        <h3 className="font-medium text-[13px] sm:text-base text-neutral-900 group-hover:underline underline-offset-4 decoration-neutral-300 line-clamp-2">
+          {w.title}
+        </h3>
+        <p className="text-[11px] sm:text-[13px] text-neutral-400 mt-0.5 sm:mt-1">
+          {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · {formatDate(w.updated_at)}
+        </p>
+        {w.tags && w.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {w.tags.slice(0, 3).map((t) => (
+              <span key={t} className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-400">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Link>
+  )
+
   const catBtn = (name: string, label: string, wide: boolean) => {
     const on = category === name
     if (wide) {
@@ -265,54 +317,20 @@ export default function Home() {
                 {q ? '换个关键词试试' : '登录后台，记录你的第一个作品'}
               </p>
             </div>
+          ) : showSections ? (
+            <>
+              <div className="flex items-center gap-1.5 mb-4">
+                <svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+                </svg>
+                <h2 className="text-xs font-medium tracking-[0.25em] text-neutral-400">精选</h2>
+              </div>
+              <div className={gridCls}>{featuredWorks.map((w, i) => card(w, i))}</div>
+              <div className="my-8 sm:my-10 border-t border-neutral-100" />
+              <div className={gridCls}>{restWorks.map((w, i) => card(w, i))}</div>
+            </>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5 px-px">
-              {works.map((w, i) => (
-                <Link
-                  key={w.id}
-                  to={'/work/' + w.slug}
-                  className="card-in block group"
-                  style={{ animationDelay: Math.min(i * 40, 320) + 'ms' }}
-                >
-                  <div className="rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 relative">
-                    {coverOf(w) ? (
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img
-                          src={coverOf(w) || undefined}
-                          alt={w.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-[4/3] flex items-center justify-center">
-                        <span className="text-neutral-300 text-4xl font-bold tracking-widest">
-                          {w.title.slice(0, 1)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
-                  </div>
-                  <div className="pt-2 sm:pt-3 pb-1 px-0.5">
-                    <h3 className="font-medium text-[13px] sm:text-base text-neutral-900 group-hover:underline underline-offset-4 decoration-neutral-300 line-clamp-2">
-                      {w.title}
-                    </h3>
-                    <p className="text-[11px] sm:text-[13px] text-neutral-400 mt-0.5 sm:mt-1">
-                      {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · {formatDate(w.updated_at)}
-                    </p>
-                    {w.tags && w.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {w.tags.slice(0, 3).map((t) => (
-                          <span key={t} className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-400">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <div className={gridCls}>{works.map((w, i) => card(w, i))}</div>
           )}
         </main>
 
