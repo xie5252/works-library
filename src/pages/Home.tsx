@@ -68,10 +68,10 @@ export default function Home() {
     })
   }
 
-  // 精选（后台星标 featured_order）与常规作品分组：仅首页默认视图分区，筛选/搜索时平铺
+  // 精选（后台星标 featured_order）与常规作品分组：首页默认视图与分类筛选均分区，搜索时平铺
   const featuredWorks = works.filter((w) => w.featured_order != null)
   const restWorks = works.filter((w) => w.featured_order == null)
-  const showSections = !category && !q && featuredWorks.length > 0
+  const showSections = !q && featuredWorks.length > 0
   const gridCls = 'grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5 px-px'
 
   const card = (w: Work, i: number) => (
