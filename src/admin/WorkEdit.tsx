@@ -414,7 +414,16 @@ export default function AdminWorkEdit() {
             )}
             <div className="flex items-center gap-3 mt-7 w-full">
               <button
-                onClick={() => navigate('/admin/works/new')}
+                onClick={() => {
+                  // 组件可能仍挂在 /works/new 路由上（navigate 同路径不会重载），手动重置为全新编辑态
+                  setPubOk(null)
+                  setForm(EMPTY)
+                  setSlug(null)
+                  slugRef.current = null
+                  setDirty(false)
+                  setSaveState('idle')
+                  navigate('/admin/works/new', { replace: true })
+                }}
                 className="flex-1 h-10 rounded-full border border-neutral-300 text-sm font-medium text-neutral-900 hover:border-neutral-900 transition"
               >
                 再写一篇
