@@ -325,7 +325,7 @@ export default function AdminWorkEdit() {
                       (on ? 'border-neutral-900' : 'border-transparent hover:border-neutral-300')
                     }
                   >
-                    <span className={'block h-14 ' + o.cls} />
+                    <span className={'block h-9 ' + o.cls} />
                     <span
                       className={
                         'block py-1.5 text-xs text-center ' +
