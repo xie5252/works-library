@@ -222,7 +222,7 @@ export default function AdminWorkEdit() {
             />
           </div>
         </div>
-        <aside className="w-full lg:w-72 shrink-0 space-y-8 lg:sticky lg:top-32">
+        <aside className="w-full lg:w-72 shrink-0 space-y-5 lg:sticky lg:top-32">
           <section>
             <h3 className="text-sm font-medium text-neutral-700 mb-3">
               封面 <span className="text-red-500">*</span>
