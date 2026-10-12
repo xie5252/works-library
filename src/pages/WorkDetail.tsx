@@ -318,22 +318,26 @@ export default function WorkDetail() {
           <div className={COL + ' pt-16 pb-10'}>
             <div className="flex flex-wrap gap-2">
               {(work.categories && work.categories.length > 0 ? work.categories : [work.category]).map((c) => (
-                <span
+                <button
                   key={c}
-                  className="inline-block px-3 py-1 rounded-full bg-neutral-100 text-xs text-neutral-500"
+                  onClick={() => navigate('/?category=' + encodeURIComponent(c))}
+                  className="inline-block px-3 py-1 rounded-full bg-neutral-100 text-xs text-neutral-500 hover:bg-neutral-900 hover:text-white transition"
+                  title={'查看分类「' + c + '」下的作品'}
                 >
                   {c}
-                </span>
-              ))}
-              {work.tags && work.tags.length > 0 && (
-                <button
-                  onClick={() => navigate('/?q=' + encodeURIComponent(work.tags.join(' ')))}
-                  className="inline-block px-3 py-1 rounded-full border border-neutral-200 text-xs text-neutral-400 hover:border-neutral-900 hover:text-neutral-900 transition"
-                  title={'搜索标签：' + work.tags.join('、')}
-                >
-                  {work.tags.join(' / ')}
                 </button>
-              )}
+              ))}
+              {work.tags &&
+                work.tags.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => navigate('/?q=' + encodeURIComponent(t))}
+                    className="inline-block px-3 py-1 rounded-full border border-neutral-200 text-xs text-neutral-400 hover:border-neutral-900 hover:text-neutral-900 transition"
+                    title={'搜索标签：' + t}
+                  >
+                    {t}
+                  </button>
+                ))}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-5 leading-snug">
               {work.title}

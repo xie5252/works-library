@@ -274,6 +274,39 @@ export default function AdminWorkEdit() {
             />
           </section>
 
+          {/* 分类：必填常用项，紧跟封面避免沉底 */}
+          <section>
+            <h3 className="text-sm font-medium text-neutral-700 mb-3">
+              分类 <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs text-neutral-400 font-normal">可多选</span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {cats.map((c) => {
+                const on = form.categories.includes(c)
+                return (
+                  <button
+                    key={c}
+                    onClick={() =>
+                      patch({
+                        categories: on
+                          ? form.categories.filter((x) => x !== c)
+                          : [...form.categories, c],
+                      })
+                    }
+                    className={
+                      'px-3 h-8 rounded-lg text-sm transition ' +
+                      (on
+                        ? 'bg-neutral-900 text-white font-medium'
+                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200')
+                    }
+                  >
+                    {c}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
           {/* 页面背景主题 */}
           <section>
             <h3 className="text-sm font-medium text-neutral-700 mb-3">页面背景</h3>
@@ -356,38 +389,6 @@ export default function AdminWorkEdit() {
               show('封面已更新')
             }}
           />
-
-          <section>
-            <h3 className="text-sm font-medium text-neutral-700 mb-3">
-              分类 <span className="text-red-500">*</span>
-              <span className="ml-2 text-xs text-neutral-400 font-normal">可多选</span>
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {cats.map((c) => {
-                const on = form.categories.includes(c)
-                return (
-                  <button
-                    key={c}
-                    onClick={() =>
-                      patch({
-                        categories: on
-                          ? form.categories.filter((x) => x !== c)
-                          : [...form.categories, c],
-                      })
-                    }
-                    className={
-                      'px-3 h-8 rounded-lg text-sm transition ' +
-                      (on
-                        ? 'bg-neutral-900 text-white font-medium'
-                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200')
-                    }
-                  >
-                    {c}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
         </aside>
       </div>
 
