@@ -310,7 +310,7 @@ export default function AdminWorkEdit() {
           {/* 页面背景主题 */}
           <section>
             <h3 className="text-sm font-medium text-neutral-700 mb-3">页面背景</h3>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex gap-2.5">
               {([
                 { v: 'light', label: '典雅白', cls: 'bg-white border-neutral-200' },
                 { v: 'dark', label: '高端黑', cls: 'bg-neutral-950 border-neutral-950' },
@@ -321,15 +321,15 @@ export default function AdminWorkEdit() {
                     key={o.v}
                     onClick={() => patch({ bg_theme: o.v })}
                     className={
-                      'rounded-xl overflow-hidden border-2 transition ' +
+                      'w-24 rounded-lg overflow-hidden border-2 transition ' +
                       (on ? 'border-neutral-900' : 'border-transparent hover:border-neutral-300')
                     }
                   >
-                    <span className={'block h-9 ' + o.cls} />
+                    <span className={'block h-6 ' + o.cls} />
                     <span
                       className={
-                        'block py-1.5 text-xs text-center ' +
-                        (on ? 'text-neutral-900 font-medium' : 'text-neutral-400')
+                        'block py-1 text-[11px] text-center ' +
+                        (on ? 'text-neutral-900 font-medium' : 'text-neutral-300')
                       }
                     >
                       {o.label}
