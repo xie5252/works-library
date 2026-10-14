@@ -4,6 +4,7 @@ import { api } from '../api'
 import type { Work, SiteSettings, Category } from '../types'
 import { FALLBACK_CATEGORIES } from '../types'
 import { formatDate, coverOf, rewriteMedia } from '../components/format'
+import SmartImg from '../components/SmartImg'
 import CategoryIcon from '../components/CategoryIcon'
 
 const SIDEBAR_KEY = 'worklib_sidebar_open'
@@ -86,8 +87,8 @@ export default function Home() {
       <div className="rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 relative">
         {coverOf(w) ? (
           <div className="aspect-[4/3] overflow-hidden">
-            <img
-              src={coverOf(w) || undefined}
+            <SmartImg
+              src={coverOf(w)}
               alt={w.title}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
@@ -173,8 +174,8 @@ export default function Home() {
         >
           <Link to="/" className="flex items-center gap-2.5 min-w-0">
             {settings.logo ? (
-              <img
-                src={rewriteMedia(settings.media_cdn, settings.logo) || undefined}
+              <SmartImg
+                src={rewriteMedia(settings.media_cdn, settings.logo)}
                 alt="logo"
                 className="h-10 w-auto max-w-[150px] object-contain shrink-0"
               />
@@ -263,7 +264,7 @@ export default function Home() {
           <div className="px-4 h-14 flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2 min-w-0 shrink">
               {settings.logo ? (
-                <img src={rewriteMedia(settings.media_cdn, settings.logo) || undefined} alt="logo" className="h-7 w-auto max-w-[90px] object-contain shrink-0" />
+                <SmartImg src={rewriteMedia(settings.media_cdn, settings.logo)} alt="logo" className="h-7 w-auto max-w-[90px] object-contain shrink-0" />
               ) : null}
               <span className="text-lg font-bold tracking-tight truncate">
                 {settings.site_name_en || settings.site_name}

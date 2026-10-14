@@ -12,6 +12,7 @@ export default function AdminSettings() {
   const [footerCredit, setFooterCredit] = useState('')
   const [beianNo, setBeianNo] = useState('')
   const [mediaCdn, setMediaCdn] = useState('')
+  const [relayToken, setRelayToken] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -27,6 +28,9 @@ export default function AdminSettings() {
         setBeianNo(s.beian_no || '')
         setMediaCdn(s.media_cdn || '')
       })
+      .catch(() => {})
+    api<{ media_cdn?: string; relay_token?: string }>('/api/admin/relay-info')
+      .then((r) => setRelayToken(r.relay_token || ''))
       .catch(() => {})
   }, [])
 
@@ -54,6 +58,7 @@ export default function AdminSettings() {
           footer_credit: footerCredit.trim(),
           beian_no: beianNo.trim(),
           media_cdn: mediaCdn.trim(),
+          relay_token: relayToken.trim(),
         }),
       )
       show('设置已保存，前台已生效')
@@ -196,6 +201,34 @@ export default function AdminSettings() {
             />
             <p className="text-xs text-neutral-400 mt-2">
               配置后前台图片/视频改从该域名加载（国内 CDN 加速）；留空则直连源站。CDN 回源地址须指向本站域名
+            </p>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-neutral-700 mb-3">上传中转令牌</h3>
+            <div className="flex gap-2 items-center">
+              <input
+                value={relayToken}
+                onChange={(e) => setRelayToken(e.target.value)}
+                placeholder="留空则上传直连 Cloudflare"
+                maxLength={64}
+                className="w-full sm:w-80 h-11 px-4 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition font-mono"
+              />
+              <button
+                onClick={() =>
+                  setRelayToken(
+                    Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                      .map((b) => b.toString(16).padStart(2, '0'))
+                      .join(''),
+                  )
+                }
+                className="h-11 px-4 shrink-0 rounded-xl border border-neutral-200 text-xs text-neutral-500 hover:border-neutral-900 hover:text-neutral-900 transition"
+              >
+                随机生成
+              </button>
+            </div>
+            <p className="text-xs text-neutral-400 mt-2">
+              与「图片加速域名」配合启用上传中转：图片先传上海服务器（快），后台自动同步到 Cloudflare。清空则上传直连
             </p>
           </section>
 

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import type { Work, SiteSettings, ContentBlock, Category } from '../types'
 import { formatDate, coverOf, rewriteMedia } from '../components/format'
+import SmartImg from '../components/SmartImg'
 import CategoryIcon from '../components/CategoryIcon'
 
 // 统一固定宽度内容栏：任何尺寸的图片都按栏宽显示
@@ -70,7 +71,7 @@ function BlockView({
   if (block.type === 'image') {
     return (
       <figure className={COL}>
-        <img
+        <SmartImg
           src={block.url}
           alt={block.caption || ''}
           loading="lazy"
@@ -258,7 +259,7 @@ export default function WorkDetail() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             {settings.logo && (
-              <img src={rewriteMedia(settings.media_cdn, settings.logo) || undefined} alt="logo" className="h-8 w-auto object-contain" />
+              <SmartImg src={rewriteMedia(settings.media_cdn, settings.logo)} alt="logo" className="h-8 w-auto object-contain" />
             )}
             <span className="text-xl font-bold tracking-tight">
               <span className="md:hidden">{settings.site_name_en || settings.site_name}</span>
@@ -352,7 +353,7 @@ export default function WorkDetail() {
           <div className={dark ? 'bg-neutral-950 py-14' : 'py-0'}>
             {mainCover && !coverInBody && (
               <div className={COL + (mainCover ? ' mb-14' : '')}>
-                <img
+                <SmartImg
                   src={mainCover}
                   alt={work.title}
                   onClick={() => setLightbox(0)}
@@ -398,8 +399,8 @@ export default function WorkDetail() {
                       <div className="rounded-xl overflow-hidden bg-neutral-100">
                         {coverOf(w) ? (
                           <div className="aspect-[4/3] overflow-hidden">
-                            <img
-                              src={coverOf(w) || undefined}
+                            <SmartImg
+                              src={coverOf(w)}
                               alt={w.title}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
@@ -435,12 +436,21 @@ export default function WorkDetail() {
           className="fixed inset-0 z-[80] bg-black/90 flex items-center justify-center"
           onClick={() => setLightbox(null)}
         >
-          <img
+          <SmartImg
             src={lightboxImages[lightbox]}
             alt=""
             onClick={(e) => e.stopPropagation()}
             className="max-w-[92vw] max-h-[88vh] object-contain select-none"
           />
+          <a
+            href={lightboxImages[lightbox]}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white text-xs transition"
+          >
+            查看原图 ↗
+          </a>
           <button
             onClick={() => setLightbox(null)}
             className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/25 text-white text-lg transition"

@@ -5,6 +5,8 @@ import { requireAuth } from './auth'
 const settings = new Hono<{ Bindings: Env }>()
 
 const PUBLIC_KEYS = ['logo', 'site_name', 'site_name_en', 'footer_text', 'footer_credit', 'beian_no', 'media_cdn']
+// 仅管理端可见的键（不进公开接口，避免泄露上传中转凭证）
+const ADMIN_KEYS = ['relay_token']
 
 // 公开接口：前台读取 Logo、网站名称、英文副标题、版权署名、页脚文字、备案号、媒体 CDN 域名
 settings.get('/settings', async (c) => {
@@ -34,8 +36,10 @@ settings.put('/settings', requireAuth, async (c) => {
     footer_credit?: string
     beian_no?: string
     media_cdn?: string
+    relay_token?: string
   }>()
-  for (const key of PUBLIC_KEYS) {
+  const allKeys = [...PUBLIC_KEYS, ...ADMIN_KEYS]
+  for (const key of allKeys) {
     const value = body[key as keyof typeof body]
     if (value !== undefined) {
       await qRun(
@@ -48,6 +52,17 @@ settings.put('/settings', requireAuth, async (c) => {
     }
   }
   return c.json({ ok: true })
+})
+
+// 上传中转信息（仅登录管理员）：前端 uploadFile 据此决定是否走上海服务器中转
+settings.get('/relay-info', requireAuth, async (c) => {
+  const rows = await qAll<{ key: string; value: string }>(
+    c.env.DB,
+    `SELECT key, value FROM settings WHERE key IN ('media_cdn','relay_token')`,
+  )
+  const obj: Record<string, string> = {}
+  for (const r of rows) obj[r.key] = r.value
+  return c.json({ media_cdn: obj.media_cdn || '', relay_token: obj.relay_token || '' })
 })
 
 export const settingsRoutes = settings
