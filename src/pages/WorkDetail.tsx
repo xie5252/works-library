@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import type { Work, SiteSettings, ContentBlock, Category } from '../types'
-import { formatDate, coverOf } from '../components/format'
+import { formatDate, coverOf, rewriteMedia } from '../components/format'
 import CategoryIcon from '../components/CategoryIcon'
 
 // 统一固定宽度内容栏：任何尺寸的图片都按栏宽显示
@@ -128,7 +128,7 @@ export default function WorkDetail() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const [work, setWork] = useState<Work | null>(null)
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '', media_cdn: '' })
   const [cats, setCats] = useState<string[]>([])
   const [selCat, setSelCat] = useState('__featured')
   const [more, setMore] = useState<Work[]>([])
@@ -137,14 +137,18 @@ export default function WorkDetail() {
   // 灯箱：当前查看的图片在正文图片列表中的下标
   const [lightbox, setLightbox] = useState<number | null>(null)
 
+  // 媒体 URL 重写：后台配置了 CDN 域名时，正文/灯箱/推荐图走加速域名
+  const viewWork = useMemo(() => rewriteMedia(settings.media_cdn, work), [settings.media_cdn, work])
+  const viewMore = useMemo(() => rewriteMedia(settings.media_cdn, more), [settings.media_cdn, more])
+
   // 灯箱图片列表
-  const mainCover = work ? coverOf(work) : null
+  const mainCover = viewWork ? coverOf(viewWork) : null
   const contentImgs =
-    work?.content
+    viewWork?.content
       .filter((b): b is Extract<ContentBlock, { type: 'image' }> => b.type === 'image')
       .map((b) => b.url) ?? []
   // 封面若由正文某图裁剪而来（cover_source），正文正常显示原图，顶部不再重复渲染封面
-  const coverInBody = !!work?.cover_source && contentImgs.includes(work.cover_source)
+  const coverInBody = !!viewWork?.cover_source && contentImgs.includes(viewWork.cover_source)
   const lightboxImages = coverInBody
     ? contentImgs
     : mainCover
@@ -254,7 +258,7 @@ export default function WorkDetail() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             {settings.logo && (
-              <img src={settings.logo} alt="logo" className="h-8 w-auto object-contain" />
+              <img src={rewriteMedia(settings.media_cdn, settings.logo) || undefined} alt="logo" className="h-8 w-auto object-contain" />
             )}
             <span className="text-xl font-bold tracking-tight">
               <span className="md:hidden">{settings.site_name_en || settings.site_name}</span>
@@ -357,12 +361,12 @@ export default function WorkDetail() {
               </div>
             )}
             <div className="space-y-12">
-              {work.content.map((block, i) => (
+              {viewWork!.content.map((block, i) => (
                 <BlockView
                   key={i}
                   block={block}
                   index={i}
-                  blocks={work.content}
+                  blocks={viewWork!.content}
                   dark={dark}
                   onImage={(url) =>
                     setLightbox(lightboxImages.indexOf(url) === -1 ? 0 : lightboxImages.indexOf(url))
@@ -379,11 +383,11 @@ export default function WorkDetail() {
             <h2 className="text-xl font-bold tracking-tight">
               {selCat === '__featured' ? '相关推荐' : selCat + ' · 更多作品'}
             </h2>
-            {more.filter((w) => w.slug !== slug).length === 0 ? (
+            {viewMore.filter((w) => w.slug !== slug).length === 0 ? (
               <p className="text-sm text-neutral-300 mt-6">该分类下暂无其他作品</p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 mt-6">
-                {more
+                {viewMore
                   .filter((w) => w.slug !== slug)
                   .map((w) => (
                     <Link

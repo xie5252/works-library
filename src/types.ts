@@ -68,6 +68,7 @@ export interface SiteSettings {
   footer_text: string
   footer_credit: string
   beian_no: string
+  media_cdn: string
 }
 
 export interface Category {

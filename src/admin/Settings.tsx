@@ -11,10 +11,11 @@ export default function AdminSettings() {
   const [footerText, setFooterText] = useState('')
   const [footerCredit, setFooterCredit] = useState('')
   const [beianNo, setBeianNo] = useState('')
+  const [mediaCdn, setMediaCdn] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string; footer_credit?: string; beian_no?: string }>(
+    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string; footer_credit?: string; beian_no?: string; media_cdn?: string }>(
       '/api/admin/settings',
     )
       .then((s) => {
@@ -24,6 +25,7 @@ export default function AdminSettings() {
         setFooterText(s.footer_text || '')
         setFooterCredit(s.footer_credit || '')
         setBeianNo(s.beian_no || '')
+        setMediaCdn(s.media_cdn || '')
       })
       .catch(() => {})
   }, [])
@@ -51,6 +53,7 @@ export default function AdminSettings() {
           footer_text: footerText.trim(),
           footer_credit: footerCredit.trim(),
           beian_no: beianNo.trim(),
+          media_cdn: mediaCdn.trim(),
         }),
       )
       show('设置已保存，前台已生效')
@@ -179,6 +182,20 @@ export default function AdminSettings() {
             />
             <p className="text-xs text-neutral-400 mt-2">
               显示在侧边栏底部与页面页脚，自动链接至工信部备案网站；留空则不显示
+            </p>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-neutral-700 mb-3">图片加速域名（CDN）</h3>
+            <input
+              value={mediaCdn}
+              onChange={(e) => setMediaCdn(e.target.value)}
+              placeholder="https://media.xieke.xyz"
+              maxLength={100}
+              className="w-full sm:w-80 h-11 px-4 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+            />
+            <p className="text-xs text-neutral-400 mt-2">
+              配置后前台图片/视频改从该域名加载（国内 CDN 加速）；留空则直连源站。CDN 回源地址须指向本站域名
             </p>
           </section>
 
