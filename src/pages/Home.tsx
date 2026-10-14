@@ -9,7 +9,7 @@ import CategoryIcon from '../components/CategoryIcon'
 const SIDEBAR_KEY = 'worklib_sidebar_open'
 
 export default function Home() {
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '' })
   const footerText = settings.footer_text
   const [cats, setCats] = useState<string[]>(FALLBACK_CATEGORIES)
   const [works, setWorks] = useState<Work[]>([])
@@ -230,6 +230,17 @@ export default function Home() {
             <span>©</span>
           )}
         </div>
+        {open && settings.beian_no && (
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noreferrer"
+            className="block px-4 pb-3 -mt-1 text-[11px] leading-4 text-neutral-300 hover:text-neutral-500 transition truncate"
+            title="工信部备案查询"
+          >
+            {settings.beian_no}
+          </a>
+        )}
         {!open && (
           <button
             onClick={toggle}
@@ -336,6 +347,19 @@ export default function Home() {
 
         <footer className="border-t border-neutral-100 py-8 text-center text-xs text-neutral-300">
           {settings.footer_credit || 'Design · Product · Digital · Ai'}
+          {settings.beian_no && (
+            <>
+              {' · '}
+              <a
+                href="https://beian.miit.gov.cn/"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-neutral-500 transition"
+              >
+                {settings.beian_no}
+              </a>
+            </>
+          )}
         </footer>
       </div>
     </div>

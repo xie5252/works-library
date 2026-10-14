@@ -10,10 +10,11 @@ export default function AdminSettings() {
   const [siteNameEn, setSiteNameEn] = useState('')
   const [footerText, setFooterText] = useState('')
   const [footerCredit, setFooterCredit] = useState('')
+  const [beianNo, setBeianNo] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string; footer_credit?: string }>(
+    api<{ logo: string | null; site_name: string; site_name_en?: string; footer_text?: string; footer_credit?: string; beian_no?: string }>(
       '/api/admin/settings',
     )
       .then((s) => {
@@ -22,6 +23,7 @@ export default function AdminSettings() {
         setSiteNameEn(s.site_name_en || '')
         setFooterText(s.footer_text || '')
         setFooterCredit(s.footer_credit || '')
+        setBeianNo(s.beian_no || '')
       })
       .catch(() => {})
   }, [])
@@ -48,6 +50,7 @@ export default function AdminSettings() {
           site_name_en: siteNameEn.trim(),
           footer_text: footerText.trim(),
           footer_credit: footerCredit.trim(),
+          beian_no: beianNo.trim(),
         }),
       )
       show('设置已保存，前台已生效')
@@ -162,6 +165,20 @@ export default function AdminSettings() {
             />
             <p className="text-xs text-neutral-400 mt-2">
               显示在前台页面最底部；留空则显示默认的 Design · Product · Digital · Ai
+            </p>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium text-neutral-700 mb-3">ICP 备案号</h3>
+            <input
+              value={beianNo}
+              onChange={(e) => setBeianNo(e.target.value)}
+              placeholder="晋ICP备2026015294号"
+              maxLength={30}
+              className="w-full sm:w-80 h-11 px-4 rounded-xl border border-neutral-200 text-sm outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition"
+            />
+            <p className="text-xs text-neutral-400 mt-2">
+              显示在侧边栏底部与页面页脚，自动链接至工信部备案网站；留空则不显示
             </p>
           </section>
 

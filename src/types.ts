@@ -67,6 +67,7 @@ export interface SiteSettings {
   site_name_en: string
   footer_text: string
   footer_credit: string
+  beian_no: string
 }
 
 export interface Category {

@@ -25,11 +25,10 @@
       "bucket_name": "works-media"
     }
   ],
-  // 自定义域名：备案期间暂停（阿里云要求域名获得备案号前保持关闭状态）
-  // 备案通过后取消注释恢复，并追加国内 CDN 配置
-  // "routes": [
-  //   { "pattern": "xieke.xyz", "custom_domain": true }
-  // ],
+  // 自定义域名：备案（晋ICP备2026015294号）已通过，恢复绑定；deploy 自动建 DNS 记录+证书
+  "routes": [
+    { "pattern": "xieke.xyz", "custom_domain": true }
+  ],
   // pages.dev / 自定义域名均为 HTTPS，cookie 加 secure
   "vars": {
     "COOKIE_SECURE": "1"
