@@ -25,10 +25,12 @@
       "bucket_name": "works-media"
     }
   ],
-  // 自定义域名：备案（晋ICP备2026015294号）已通过，恢复绑定；deploy 自动建 DNS 记录+证书
-  "routes": [
-    { "pattern": "xieke.xyz", "custom_domain": true }
-  ],
+  // 自定义域名已迁移至阿里云服务器（国内主站 xieke.xyz，nginx 直部署）
+  // Cloudflare 仅保留 workers.dev 作海外预览；这里不要再绑 custom_domain，
+  // 否则 deploy 会把域名从阿里云抢回 CF。
+  // "routes": [
+  //   { "pattern": "xieke.xyz", "custom_domain": true }
+  // ],
   // pages.dev / 自定义域名均为 HTTPS，cookie 加 secure
   "vars": {
     "COOKIE_SECURE": "1"

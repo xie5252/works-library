@@ -6,3 +6,4 @@ media/
 .dev.vars
 .DS_Store
 *.local
+dist-server/
