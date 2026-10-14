@@ -1,0 +1,21 @@
+# works-library Node 服务（systemd 常驻）
+# 安装：sudo cp deploy/works-library.service /etc/systemd/system/ && sudo systemctl daemon-reload
+# 启动：sudo systemctl enable --now works-library
+[Unit]
+Description=works-library Node API (Hono)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/works-library
+ExecStart=/usr/bin/node dist-server/node.mjs
+Environment=PORT=8788
+Environment=DB_PATH=/srv/works-library/data/works.db
+Environment=MEDIA_DIR=/srv/works-library/media
+EnvironmentFile=/srv/works-library/.env
+Restart=always
+RestartSec=3
+# 若 Node 不在 /usr/bin/node，用 `which node` 查实际路径后修改 ExecStart
+
+[Install]
+WantedBy=multi-user.target
