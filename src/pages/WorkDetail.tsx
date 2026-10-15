@@ -147,11 +147,8 @@ export default function WorkDetail() {
     viewWork?.content
       .filter((b): b is Extract<ContentBlock, { type: 'image' }> => b.type === 'image')
       .map((b) => b.url) ?? []
-  // 详情页所见即所得：正文严格按编辑器顺序渲染，正文第一块是什么页面就从什么开始。
-  // 只有手动设置了封面（cover_source）才在顶部显示开场大图，正文中跳过被裁剪成封面的那张原图；
-  // 默认封面（未手动选择时动态取第一张图）不再提升到顶部，只用于列表卡片。
-  const topCover = viewWork && viewWork.cover_source ? viewWork.cover : null
-  const skipCoverUrl = viewWork?.cover_source ?? null
+  // 详情页所见即所得：正文严格按编辑器顺序渲染，一屏不多一屏不少。
+  // 封面（含手动选择的裁切封面）只用于列表卡片等封面场景，不进入详情页、不影响正文排版。
   const lightboxImages = contentImgs
 
   // 灯箱键盘操作 + 背景滚动锁定
@@ -349,46 +346,21 @@ export default function WorkDetail() {
           </div>
           {/* 黑色主题：仅作品内容区为黑色通栏，导航/标题/底部保持白底 */}
           <div className={dark ? 'bg-neutral-950 py-14' : 'py-0'}>
-            {topCover && (
-              <div className={COL + ' mb-14'}>
-                <SmartImg
-                  src={topCover}
-                  alt={work.title}
-                  className="w-full rounded-2xl"
-                />
-              </div>
-            )}
             <div className="space-y-12">
-              {(() => {
-                let coverSkipped = false
-                return viewWork!.content.map((block, i) => {
-                  if (
-                    skipCoverUrl &&
-                    !coverSkipped &&
-                    block.type === 'image' &&
-                    block.url === skipCoverUrl
-                  ) {
-                    coverSkipped = true
-                    return null
+              {viewWork!.content.map((block, i) => (
+                <BlockView
+                  key={i}
+                  block={block}
+                  index={i}
+                  blocks={viewWork!.content}
+                  dark={dark}
+                  onImage={(url) =>
+                    setLightbox(
+                      lightboxImages.indexOf(url) === -1 ? 0 : lightboxImages.indexOf(url),
+                    )
                   }
-                  return (
-                    <BlockView
-                      key={i}
-                      block={block}
-                      index={i}
-                      blocks={viewWork!.content}
-                      dark={dark}
-                      onImage={(url) =>
-                        setLightbox(
-                          lightboxImages.indexOf(url) === -1
-                            ? 0
-                            : lightboxImages.indexOf(url),
-                        )
-                      }
-                    />
-                  )
-                })
-              })()}
+                />
+              ))}
             </div>
           </div>
           {/* 相关推荐：站酷式通栏网格 */}
