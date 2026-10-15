@@ -15,6 +15,28 @@ export default function CategoryIcon({
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
   }
+  // AI 系分类（AI应用 / AI数字化 / AI 作品……）按前缀匹配专属图标
+  const compact = name.replace(/\s+/g, '')
+  if (/^AI/i.test(compact)) {
+    if (compact === 'AI作品') {
+      // 星光：AI 生成作品
+      return (
+        <svg {...p}>
+          <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+          <path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" />
+          <path d="M5 15.5l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z" />
+        </svg>
+      )
+    }
+    // 芯片：AI 应用 / AI 数字化
+    return (
+      <svg {...p}>
+        <rect x="5" y="5" width="14" height="14" rx="2" />
+        <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
+        <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
+      </svg>
+    )
+  }
   switch (name) {
     case '精选':
       return (
@@ -52,14 +74,6 @@ export default function CategoryIcon({
         <svg {...p}>
           <circle cx="12" cy="12" r="9" />
           <path d="M10 8.5l6 3.5-6 3.5v-7z" />
-        </svg>
-      )
-    case 'AI应用':
-      return (
-        <svg {...p}>
-          <rect x="5" y="5" width="14" height="14" rx="2" />
-          <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
-          <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
         </svg>
       )
     case '数字化':
