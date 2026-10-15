@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, jsonRequest } from '../api'
-import type { Work } from '../types'
+import type { Work, Category } from '../types'
 import { formatDateTime, coverOf } from '../components/format'
 import { ToastContainer, useToasts } from '../components/Toast'
-
-const CATS = ['全部', '设计', '摄影', '视频', 'AI应用', '数字化', '其他']
 
 // 主分类：取第一个分类标签，空则归「其他」
 function primaryOf(w: Work): string {
@@ -18,6 +16,9 @@ export default function AdminWorkList() {
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('全部')
+  const [cats, setCats] = useState<Category[]>([])
+  // 筛选栏动态读取分类表（设置里加/删分类后这里跟着变）
+  const catNames = ['全部', ...cats.map((c) => c.name)]
   const [view, setView] = useState<'list' | 'grid'>(() =>
     localStorage.getItem('admin_work_view') === 'grid' ? 'grid' : 'list',
   )
@@ -32,6 +33,12 @@ export default function AdminWorkList() {
       .then(setWorks)
       .catch(() => setWorks([]))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    api<Category[]>('/api/categories')
+      .then(setCats)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -83,12 +90,12 @@ export default function AdminWorkList() {
       if (!map.has(p)) map.set(p, [])
       map.get(p)!.push(w)
     }
-    const ordered = CATS.filter((n) => n !== '全部' && map.has(n)).map((n) => ({
+    const ordered = catNames.filter((n) => n !== '全部' && map.has(n)).map((n) => ({
       name: n,
       items: map.get(n)!,
     }))
     for (const [n, items] of map) {
-      if (!CATS.includes(n)) ordered.push({ name: n, items })
+      if (!catNames.includes(n)) ordered.push({ name: n, items })
     }
     return ordered
   })()
@@ -159,7 +166,7 @@ export default function AdminWorkList() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          {CATS.map((c) => (
+          {catNames.map((c) => (
             <button
               key={c}
               onClick={() => setCat(c)}

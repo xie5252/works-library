@@ -45,7 +45,21 @@ adminCat.post('/categories', requireAuth, async (c) => {
   return c.json(row, 201)
 })
 
-// 改名 / 上移下移（direction）
+// 拖拽排序：按前端给的新顺序批量写入 sort（必须注册在 /categories/:id 之前，否则被 :id 捕获）
+adminCat.put('/categories/reorder', requireAuth, async (c) => {
+  const { ids } = await c.req.json<{ ids?: number[] }>()
+  if (!Array.isArray(ids) || ids.length === 0) return c.json({ error: '参数错误' }, 400)
+  const total = await qGet<{ m: number }>(c.env.DB, 'SELECT COUNT(*) m FROM categories')
+  if (ids.length !== (total?.m ?? 0)) return c.json({ error: '分类数量不一致，请刷新后重试' }, 400)
+  await c.env.DB.batch(
+    ids.map((cid, i) =>
+      c.env.DB.prepare('UPDATE categories SET sort=? WHERE id=?').bind(i + 1, cid),
+    ),
+  )
+  return c.json({ ok: true })
+})
+
+// 改名 / 拖拽排序（direction，兼容旧版上下移动）
 adminCat.put('/categories/:id', requireAuth, async (c) => {
   const id = Number(c.req.param('id'))
   const row = await qGet<CategoryRow>(c.env.DB, 'SELECT * FROM categories WHERE id=?', id)
@@ -57,7 +71,31 @@ adminCat.put('/categories/:id', requireAuth, async (c) => {
     if (!trimmed) return c.json({ error: '分类名不能为空' }, 400)
     const dup = await qGet(c.env.DB, 'SELECT id FROM categories WHERE name=? AND id!=?', trimmed, id)
     if (dup) return c.json({ error: '该分类已存在' }, 400)
-    await qRun(c.env.DB, 'UPDATE categories SET name=? WHERE id=?', trimmed, id)
+    if (trimmed !== row.name) {
+      await qRun(c.env.DB, 'UPDATE categories SET name=? WHERE id=?', trimmed, id)
+      // 级联更新作品里的分类文字（主分类列 + 多分类 JSON 数组，含回收站作品）
+      // 作品量级小，直接全量拉回在 JS 里精确匹配，避免 LIKE 通配符转义问题
+      await qRun(c.env.DB, 'UPDATE works SET category=? WHERE category=?', trimmed, row.name)
+      const rows = await qAll<{ id: number; categories: string | null }>(
+        c.env.DB,
+        'SELECT id, categories FROM works WHERE categories IS NOT NULL',
+      )
+      for (const r of rows) {
+        try {
+          const arr = JSON.parse(r.categories || '[]')
+          if (Array.isArray(arr) && arr.includes(row.name)) {
+            await qRun(
+              c.env.DB,
+              'UPDATE works SET categories=? WHERE id=?',
+              JSON.stringify(arr.map((n) => (n === row.name ? trimmed : n))),
+              r.id,
+            )
+          }
+        } catch {
+          // 单条 JSON 异常跳过，不影响其余
+        }
+      }
+    }
   }
 
   if (body.direction) {
