@@ -142,22 +142,17 @@ export default function WorkDetail() {
   const viewWork = useMemo(() => rewriteMedia(settings.media_cdn, work), [settings.media_cdn, work])
   const viewMore = useMemo(() => rewriteMedia(settings.media_cdn, more), [settings.media_cdn, more])
 
-  // 灯箱图片列表
-  const mainCover = viewWork ? coverOf(viewWork) : null
+  // 灯箱图片列表 = 正文图片（按编辑器顺序）
   const contentImgs =
     viewWork?.content
       .filter((b): b is Extract<ContentBlock, { type: 'image' }> => b.type === 'image')
       .map((b) => b.url) ?? []
-  // 封面若由正文某图裁剪而来（cover_source），正文正常显示原图，顶部不再重复渲染封面
-  const coverInBody = !!viewWork?.cover_source && contentImgs.includes(viewWork.cover_source)
-  // 默认封面（cover_source 为空，动态取正文第一张图）在顶部渲染时，正文里跳过这一张，避免重复
-  const skipCoverUrl =
-    mainCover && !viewWork?.cover_source && contentImgs.includes(mainCover) ? mainCover : null
-  const lightboxImages = coverInBody
-    ? contentImgs
-    : mainCover
-      ? [mainCover, ...contentImgs]
-      : contentImgs
+  // 详情页所见即所得：正文严格按编辑器顺序渲染，正文第一块是什么页面就从什么开始。
+  // 只有手动设置了封面（cover_source）才在顶部显示开场大图，正文中跳过被裁剪成封面的那张原图；
+  // 默认封面（未手动选择时动态取第一张图）不再提升到顶部，只用于列表卡片。
+  const topCover = viewWork && viewWork.cover_source ? viewWork.cover : null
+  const skipCoverUrl = viewWork?.cover_source ?? null
+  const lightboxImages = contentImgs
 
   // 灯箱键盘操作 + 背景滚动锁定
   useEffect(() => {
@@ -354,13 +349,12 @@ export default function WorkDetail() {
           </div>
           {/* 黑色主题：仅作品内容区为黑色通栏，导航/标题/底部保持白底 */}
           <div className={dark ? 'bg-neutral-950 py-14' : 'py-0'}>
-            {mainCover && !coverInBody && (
-              <div className={COL + (mainCover ? ' mb-14' : '')}>
+            {topCover && (
+              <div className={COL + ' mb-14'}>
                 <SmartImg
-                  src={mainCover}
+                  src={topCover}
                   alt={work.title}
-                  onClick={() => setLightbox(0)}
-                  className="w-full rounded-2xl cursor-zoom-in"
+                  className="w-full rounded-2xl"
                 />
               </div>
             )}
