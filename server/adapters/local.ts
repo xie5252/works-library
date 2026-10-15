@@ -17,6 +17,8 @@ interface BoundStmt {
   all: () => Promise<{ results: D1Row[] }>
   first: () => Promise<D1Row | null>
   run: () => Promise<{ success: boolean; meta: { changes: number; last_row_id: number } }>
+  // 同步执行体：better-sqlite3 事务内不允许异步（batch 用）
+  _runSync: () => { success: boolean; meta: { changes: number; last_row_id: number } }
 }
 
 export class LocalD1 {
@@ -27,30 +29,35 @@ export class LocalD1 {
     this.db.pragma('journal_mode = WAL')
   }
 
+  private execRun(
+    stmt: Database.Statement,
+    params: unknown[],
+  ): { success: boolean; meta: { changes: number; last_row_id: number } } {
+    const info = stmt.run(...(params as never[]))
+    return {
+      success: true,
+      meta: { changes: Number(info.changes), last_row_id: Number(info.lastInsertRowid) },
+    }
+  }
+
   prepare(sql: string): BoundStmt {
     const stmt = this.db.prepare(sql)
     const make = (params: unknown[]): BoundStmt => ({
       bind: (...p: unknown[]) => make([...p]),
       all: async () => ({ results: stmt.all(...(params as never[])) as D1Row[] }),
       first: async () => (stmt.get(...(params as never[])) as D1Row | undefined) ?? null,
-      run: async () => {
-        const info = stmt.run(...(params as never[]))
-        return {
-          success: true,
-          meta: { changes: Number(info.changes), last_row_id: Number(info.lastInsertRowid) },
-        }
-      },
+      run: async () => this.execRun(stmt, params),
+      _runSync: () => this.execRun(stmt, params),
     })
     return make([])
   }
 
   // 事务内顺序执行（等价 D1 batch）
+  // 注意：better-sqlite3 的事务函数必须是同步的，异步会抛
+  // "Transaction function cannot return a promise"
   async batch(statements: BoundStmt[]) {
-    return this.db.transaction(async () => {
-      const out: Array<{ success: boolean; meta: { changes: number; last_row_id: number } }> = []
-      for (const s of statements) out.push(await s.run())
-      return out
-    })()
+    const tx = this.db.transaction((stmts: BoundStmt[]) => stmts.map((s) => s._runSync()))
+    return tx(statements)
   }
 }
 
