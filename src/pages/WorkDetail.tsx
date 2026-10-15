@@ -150,6 +150,9 @@ export default function WorkDetail() {
       .map((b) => b.url) ?? []
   // 封面若由正文某图裁剪而来（cover_source），正文正常显示原图，顶部不再重复渲染封面
   const coverInBody = !!viewWork?.cover_source && contentImgs.includes(viewWork.cover_source)
+  // 默认封面（cover_source 为空，动态取正文第一张图）在顶部渲染时，正文里跳过这一张，避免重复
+  const skipCoverUrl =
+    mainCover && !viewWork?.cover_source && contentImgs.includes(mainCover) ? mainCover : null
   const lightboxImages = coverInBody
     ? contentImgs
     : mainCover
@@ -362,18 +365,36 @@ export default function WorkDetail() {
               </div>
             )}
             <div className="space-y-12">
-              {viewWork!.content.map((block, i) => (
-                <BlockView
-                  key={i}
-                  block={block}
-                  index={i}
-                  blocks={viewWork!.content}
-                  dark={dark}
-                  onImage={(url) =>
-                    setLightbox(lightboxImages.indexOf(url) === -1 ? 0 : lightboxImages.indexOf(url))
+              {(() => {
+                let coverSkipped = false
+                return viewWork!.content.map((block, i) => {
+                  if (
+                    skipCoverUrl &&
+                    !coverSkipped &&
+                    block.type === 'image' &&
+                    block.url === skipCoverUrl
+                  ) {
+                    coverSkipped = true
+                    return null
                   }
-                />
-              ))}
+                  return (
+                    <BlockView
+                      key={i}
+                      block={block}
+                      index={i}
+                      blocks={viewWork!.content}
+                      dark={dark}
+                      onImage={(url) =>
+                        setLightbox(
+                          lightboxImages.indexOf(url) === -1
+                            ? 0
+                            : lightboxImages.indexOf(url),
+                        )
+                      }
+                    />
+                  )
+                })
+              })()}
             </div>
           </div>
           {/* 相关推荐：站酷式通栏网格 */}
