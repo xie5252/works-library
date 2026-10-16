@@ -4,26 +4,29 @@ import type { AboutData } from '../types'
 import { DEFAULT_ABOUT } from '../types'
 import { ToastContainer, useToasts } from '../components/Toast'
 
-// 合并默认值：老数据缺字段时补齐，避免渲染崩溃
+// 合并默认值：老数据（v1 简版结构）直接换新默认值；缺字段补齐
 function normalize(raw: unknown): AboutData {
   const d = DEFAULT_ABOUT
   if (!raw || typeof raw !== 'object') return d
   const o = raw as Partial<AboutData>
+  if (!('strengths' in o) || !('jobs' in o)) return d
   return {
     name: o.name ?? d.name,
-    name_en: o.name_en ?? d.name_en,
     title: o.title ?? d.title,
-    tagline: o.tagline ?? d.tagline,
+    lead: o.lead ?? d.lead,
+    pdf_url: o.pdf_url ?? d.pdf_url,
     contact_email: o.contact_email ?? d.contact_email,
-    contact_phone: o.contact_phone ?? d.contact_phone,
     contact_wechat: o.contact_wechat ?? d.contact_wechat,
-    stats: Array.isArray(o.stats) ? o.stats : d.stats,
-    timeline: Array.isArray(o.timeline) ? o.timeline : d.timeline,
-    achievements: Array.isArray(o.achievements) ? o.achievements : d.achievements,
-    projects: Array.isArray(o.projects) ? o.projects : d.projects,
-    abilities: Array.isArray(o.abilities) ? o.abilities : d.abilities,
+    personal: Array.isArray(o.personal) ? o.personal : d.personal,
+    strengths: Array.isArray(o.strengths) ? o.strengths : d.strengths,
+    jobs: Array.isArray(o.jobs) ? o.jobs : d.jobs,
+    featured: o.featured ?? d.featured,
+    results: Array.isArray(o.results) ? o.results : d.results,
+    products: Array.isArray(o.products) ? o.products : d.products,
+    skill_groups: Array.isArray(o.skill_groups) ? o.skill_groups : d.skill_groups,
     skills: Array.isArray(o.skills) ? o.skills : d.skills,
-    differentiators: Array.isArray(o.differentiators) ? o.differentiators : d.differentiators,
+    field: o.field ?? d.field,
+    end: o.end ?? d.end,
   }
 }
 
@@ -41,7 +44,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-// 条目操作（上移 / 下移 / 删除）
 function ItemOps({
   index,
   total,
@@ -54,7 +56,7 @@ function ItemOps({
   onRemove: () => void
 }) {
   const btn =
-    'w-7 h-7 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition text-sm disabled:opacity-30 disabled:pointer-events-none'
+    'w-7 h-7 flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition text-sm disabled:opacity-30 disabled:pointer-events-none shrink-0'
   return (
     <div className="flex items-center gap-1 shrink-0">
       <button type="button" className={btn} disabled={index === 0} onClick={() => onMove(index, index - 1)} title="上移">
@@ -80,57 +82,9 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
   )
 }
 
-// 字符串列表（战绩 / 差异化）
-function StringList({
-  items,
-  onChange,
-  placeholder,
-  area,
-}: {
-  items: string[]
-  onChange: (next: string[]) => void
-  placeholder?: string
-  area?: boolean
-}) {
-  const move = (from: number, to: number) => {
-    const next = [...items]
-    const [x] = next.splice(from, 1)
-    next.splice(to, 0, x)
-    onChange(next)
-  }
-  return (
-    <div className="space-y-2">
-      {items.map((s, i) => (
-        <div key={i} className="flex items-start gap-2">
-          {area ? (
-            <textarea
-              value={s}
-              rows={2}
-              onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))}
-              className={areaCls}
-              placeholder={placeholder}
-            />
-          ) : (
-            <input
-              value={s}
-              onChange={(e) => onChange(items.map((x, j) => (j === i ? e.target.value : x)))}
-              className={inputCls}
-              placeholder={placeholder}
-            />
-          )}
-          <ItemOps index={i} total={items.length} onMove={move} onRemove={() => onChange(items.filter((_, j) => j !== i))} />
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={() => onChange([...items, ''])}
-        className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
-      >
-        + 添加一条
-      </button>
-    </div>
-  )
-}
+// 按钮样式复用
+const addBtn =
+  'h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition'
 
 export default function AboutEdit() {
   const { items, show } = useToasts()
@@ -188,7 +142,7 @@ export default function AboutEdit() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">关于我</h1>
             <p className="text-sm text-neutral-400 mt-2">
-              简历式个人页。开启后前台侧边栏出现「关于我」入口，关闭即恢复纯作品集
+              简历页（与参考站同款版式与动效）。开启后前台侧边栏出现「关于我」入口，关闭即恢复纯作品集
             </p>
           </div>
           <button
@@ -208,41 +162,33 @@ export default function AboutEdit() {
           </div>
           <button
             onClick={() => setEnabled((v) => !v)}
-            className={
-              'relative w-12 h-7 rounded-full transition shrink-0 ' + (enabled ? 'bg-neutral-900' : 'bg-neutral-200')
-            }
+            className={'relative w-12 h-7 rounded-full transition shrink-0 ' + (enabled ? 'bg-neutral-900' : 'bg-neutral-200')}
             aria-label="开关"
           >
             <span
-              className={
-                'absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ' +
-                (enabled ? 'translate-x-5' : '')
-              }
+              className={'absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ' + (enabled ? 'translate-x-5' : '')}
             />
           </button>
         </div>
 
-        <Section title="基本信息">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Section title="首屏" hint="姓名大字 + 一句话简介；PDF 填 /xie-ke-resume.pdf 显示下载按钮，留空隐藏">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="姓名">
               <input value={data.name} onChange={(e) => set('name', e.target.value)} className={inputCls} />
             </Field>
-            <Field label="英文名 / 拼音">
-              <input value={data.name_en} onChange={(e) => set('name_en', e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="目标岗位 / 头衔">
+            <Field label="头衔 / 定位">
               <input value={data.title} onChange={(e) => set('title', e.target.value)} className={inputCls} />
             </Field>
           </div>
-          <Field label="一句话定位（首屏简介）">
-            <textarea value={data.tagline} rows={4} onChange={(e) => set('tagline', e.target.value)} className={areaCls} />
+          <Field label="简介（首屏一段话）">
+            <textarea value={data.lead} rows={3} onChange={(e) => set('lead', e.target.value)} className={areaCls} />
           </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field label="简历 PDF 地址（留空隐藏下载按钮）">
+            <input value={data.pdf_url} onChange={(e) => set('pdf_url', e.target.value)} className={inputCls} placeholder="/xie-ke-resume.pdf" />
+          </Field>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="邮箱">
               <input value={data.contact_email} onChange={(e) => set('contact_email', e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="电话">
-              <input value={data.contact_phone} onChange={(e) => set('contact_phone', e.target.value)} className={inputCls} />
             </Field>
             <Field label="微信">
               <input value={data.contact_wechat} onChange={(e) => set('contact_wechat', e.target.value)} className={inputCls} />
@@ -250,185 +196,315 @@ export default function AboutEdit() {
           </div>
         </Section>
 
-        <Section title="数据墙" hint="最硬的几个数字，横排大字展示">
+        <Section title="01 个人信息" hint="两列信息格，label 在上 value 在下">
           <div className="space-y-2">
-            {data.stats.map((s, i) => (
+            {data.personal.map((p, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
-                  value={s.num}
-                  onChange={(e) => set('stats', data.stats.map((x, j) => (j === i ? { ...x, num: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-32 shrink-0 font-bold'}
-                  placeholder="数字"
+                  value={p.label}
+                  onChange={(e) => set('personal', data.personal.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-32 shrink-0'}
+                  placeholder="项目"
                 />
                 <input
-                  value={s.label}
-                  onChange={(e) => set('stats', data.stats.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                  value={p.value}
+                  onChange={(e) => set('personal', data.personal.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
                   className={inputCls}
-                  placeholder="说明"
+                  placeholder="内容"
                 />
                 <ItemOps
                   index={i}
-                  total={data.stats.length}
-                  onMove={(from, to) => set('stats', move(data.stats, from, to))}
-                  onRemove={() => set('stats', data.stats.filter((_, j) => j !== i))}
+                  total={data.personal.length}
+                  onMove={(from, to) => set('personal', move(data.personal, from, to))}
+                  onRemove={() => set('personal', data.personal.filter((_, j) => j !== i))}
                 />
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => set('stats', [...data.stats, { num: '', label: '' }])}
-              className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
-            >
-              + 添加数据
+            <button type="button" onClick={() => set('personal', [...data.personal, { label: '', value: '' }])} className={addBtn}>
+              + 添加一条
             </button>
           </div>
         </Section>
 
-        <Section title="经历时间线">
+        <Section title="02 个人优势" hint="六张卡片（图标按序号自动对应），悬停有浮起动效">
           <div className="space-y-4">
-            {data.timeline.map((t, i) => (
+            {data.strengths.map((s, i) => (
               <div key={i} className="rounded-xl border border-neutral-100 p-4 space-y-3">
                 <div className="flex items-start gap-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+                  <input
+                    value={s.title}
+                    onChange={(e) => set('strengths', data.strengths.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                    className={inputCls + ' flex-1 font-medium'}
+                    placeholder="标题"
+                  />
+                  <input
+                    value={s.highlight}
+                    onChange={(e) => set('strengths', data.strengths.map((x, j) => (j === i ? { ...x, highlight: e.target.value } : x)))}
+                    className={inputCls + ' sm:w-44 shrink-0'}
+                    placeholder="标签（如：实体业务）"
+                  />
+                  <ItemOps
+                    index={i}
+                    total={data.strengths.length}
+                    onMove={(from, to) => set('strengths', move(data.strengths, from, to))}
+                    onRemove={() => set('strengths', data.strengths.filter((_, j) => j !== i))}
+                  />
+                </div>
+                <textarea
+                  value={s.body}
+                  rows={2}
+                  onChange={(e) => set('strengths', data.strengths.map((x, j) => (j === i ? { ...x, body: e.target.value } : x)))}
+                  className={areaCls}
+                  placeholder="说明"
+                />
+              </div>
+            ))}
+            <button type="button" onClick={() => set('strengths', [...data.strengths, { highlight: '', title: '', body: '' }])} className={addBtn}>
+              + 添加优势
+            </button>
+          </div>
+        </Section>
+
+        <Section title="03 工作经历" hint="每段经历展开显示要点列表；浏览时自动展开当前段">
+          <div className="space-y-4">
+            {data.jobs.map((job, i) => (
+              <div key={i} className="rounded-xl border border-neutral-100 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
                     <input
-                      value={t.period}
-                      onChange={(e) => set('timeline', data.timeline.map((x, j) => (j === i ? { ...x, period: e.target.value } : x)))}
+                      value={job.year}
+                      onChange={(e) => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))}
                       className={inputCls}
-                      placeholder="时间（如 2023.10 – 至今）"
+                      placeholder="时间"
                     />
                     <input
-                      value={t.company}
-                      onChange={(e) => set('timeline', data.timeline.map((x, j) => (j === i ? { ...x, company: e.target.value } : x)))}
+                      value={job.company}
+                      onChange={(e) => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, company: e.target.value } : x)))}
                       className={inputCls}
                       placeholder="公司"
                     />
                     <input
-                      value={t.role}
-                      onChange={(e) => set('timeline', data.timeline.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
+                      value={job.role}
+                      onChange={(e) => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
                       className={inputCls}
                       placeholder="岗位"
+                    />
+                    <input
+                      value={job.city}
+                      onChange={(e) => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)))}
+                      className={inputCls}
+                      placeholder="城市"
                     />
                   </div>
                   <ItemOps
                     index={i}
-                    total={data.timeline.length}
-                    onMove={(from, to) => set('timeline', move(data.timeline, from, to))}
-                    onRemove={() => set('timeline', data.timeline.filter((_, j) => j !== i))}
+                    total={data.jobs.length}
+                    onMove={(from, to) => set('jobs', move(data.jobs, from, to))}
+                    onRemove={() => set('jobs', data.jobs.filter((_, j) => j !== i))}
                   />
                 </div>
-                <textarea
-                  value={t.desc}
-                  rows={2}
-                  onChange={(e) => set('timeline', data.timeline.map((x, j) => (j === i ? { ...x, desc: e.target.value } : x)))}
-                  className={areaCls}
-                  placeholder="职责与成果"
-                />
+                <div className="space-y-2">
+                  <p className="text-xs text-neutral-400">工作要点</p>
+                  {job.bullets.map((b, k) => (
+                    <div key={k} className="flex items-start gap-2">
+                      <textarea
+                        value={b}
+                        rows={2}
+                        onChange={(e) =>
+                          set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, bullets: x.bullets.map((y, l) => (l === k ? e.target.value : y)) } : x)))
+                        }
+                        className={areaCls}
+                      />
+                      <ItemOps
+                        index={k}
+                        total={job.bullets.length}
+                        onMove={(from, to) => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, bullets: move(x.bullets, from, to) } : x)))}
+                        onRemove={() => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, bullets: x.bullets.filter((_, l) => l !== k) } : x)))}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => set('jobs', data.jobs.map((x, j) => (j === i ? { ...x, bullets: [...x.bullets, ''] } : x)))}
+                    className={addBtn}
+                  >
+                    + 添加要点
+                  </button>
+                </div>
               </div>
             ))}
             <button
               type="button"
-              onClick={() => set('timeline', [...data.timeline, { period: '', company: '', role: '', desc: '' }])}
-              className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
+              onClick={() => set('jobs', [...data.jobs, { year: '', company: '', role: '', city: '', bullets: [''] }])}
+              className={addBtn}
             >
               + 添加经历
             </button>
           </div>
         </Section>
 
-        <Section title="核心战绩">
-          <StringList
-            items={data.achievements}
-            onChange={(v) => set('achievements', v)}
-            placeholder="一条战绩"
-            area
-          />
-        </Section>
-
-        <Section title="项目矩阵">
-          <div className="space-y-4">
-            {data.projects.map((p, i) => (
-              <div key={i} className="rounded-xl border border-neutral-100 p-4 space-y-3">
-                <div className="flex items-start gap-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
-                    <input
-                      value={p.name}
-                      onChange={(e) => set('projects', data.projects.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))}
-                      className={inputCls}
-                      placeholder="项目名"
-                    />
-                    <input
-                      value={p.year}
-                      onChange={(e) => set('projects', data.projects.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))}
-                      className={inputCls}
-                      placeholder="年份"
-                    />
-                    <input
-                      value={p.role}
-                      onChange={(e) => set('projects', data.projects.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
-                      className={inputCls}
-                      placeholder="角色"
-                    />
-                  </div>
-                  <ItemOps
-                    index={i}
-                    total={data.projects.length}
-                    onMove={(from, to) => set('projects', move(data.projects, from, to))}
-                    onRemove={() => set('projects', data.projects.filter((_, j) => j !== i))}
-                  />
-                </div>
-                <input
-                  value={p.result}
-                  onChange={(e) => set('projects', data.projects.map((x, j) => (j === i ? { ...x, result: e.target.value } : x)))}
-                  className={inputCls}
-                  placeholder="关键结果"
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => set('projects', [...data.projects, { name: '', year: '', role: '', result: '' }])}
-              className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
-            >
-              + 添加项目
-            </button>
+        <Section title="04 核心成果 · 焦点卡">
+          <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3">
+            <Field label="卡片标题">
+              <input
+                value={data.featured.title}
+                onChange={(e) => set('featured', { ...data.featured, title: e.target.value })}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="说明">
+              <input
+                value={data.featured.body}
+                onChange={(e) => set('featured', { ...data.featured, body: e.target.value })}
+                className={inputCls}
+              />
+            </Field>
           </div>
+          <p className="text-xs text-neutral-400">卡片右侧按钮固定为「查看作品 ↗」，跳回作品首页</p>
         </Section>
 
-        <Section title="能力四象限">
+        <Section title="04 核心成果 · 数据格" hint="三列大数字卡片">
           <div className="space-y-2">
-            {data.abilities.map((a, i) => (
+            {data.results.map((r, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
-                  value={a.dim}
-                  onChange={(e) => set('abilities', data.abilities.map((x, j) => (j === i ? { ...x, dim: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-44 shrink-0 font-medium'}
-                  placeholder="维度"
+                  value={r.value}
+                  onChange={(e) => set('results', data.results.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-36 shrink-0 font-bold'}
+                  placeholder="数字"
                 />
                 <input
-                  value={a.points}
-                  onChange={(e) => set('abilities', data.abilities.map((x, j) => (j === i ? { ...x, points: e.target.value } : x)))}
+                  value={r.label}
+                  onChange={(e) => set('results', data.results.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-44 shrink-0'}
+                  placeholder="指标名"
+                />
+                <input
+                  value={r.note}
+                  onChange={(e) => set('results', data.results.map((x, j) => (j === i ? { ...x, note: e.target.value } : x)))}
                   className={inputCls}
-                  placeholder="要点"
+                  placeholder="补充说明"
                 />
                 <ItemOps
                   index={i}
-                  total={data.abilities.length}
-                  onMove={(from, to) => set('abilities', move(data.abilities, from, to))}
-                  onRemove={() => set('abilities', data.abilities.filter((_, j) => j !== i))}
+                  total={data.results.length}
+                  onMove={(from, to) => set('results', move(data.results, from, to))}
+                  onRemove={() => set('results', data.results.filter((_, j) => j !== i))}
+                />
+              </div>
+            ))}
+            <button type="button" onClick={() => set('results', [...data.results, { value: '', label: '', note: '' }])} className={addBtn}>
+              + 添加数据
+            </button>
+          </div>
+        </Section>
+
+        <Section title="04 个人产品 / 独立开发" hint="三张卡片；图片填站点内地址，如 /app-bookkeeping.svg（已内置三张默认图）">
+          <div className="space-y-2">
+            {data.products.map((p, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={p.title}
+                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-40 shrink-0 font-medium'}
+                  placeholder="名称"
+                />
+                <input
+                  value={p.year}
+                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-24 shrink-0'}
+                  placeholder="年份"
+                />
+                <input
+                  value={p.role}
+                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-32 shrink-0'}
+                  placeholder="角色"
+                />
+                <input
+                  value={p.metric}
+                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, metric: e.target.value } : x)))}
+                  className={inputCls}
+                  placeholder="亮点"
+                />
+                <input
+                  value={p.image}
+                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, image: e.target.value } : x)))}
+                  className={inputCls + ' sm:w-44 shrink-0'}
+                  placeholder="图片地址"
+                />
+                <ItemOps
+                  index={i}
+                  total={data.products.length}
+                  onMove={(from, to) => set('products', move(data.products, from, to))}
+                  onRemove={() => set('products', data.products.filter((_, j) => j !== i))}
                 />
               </div>
             ))}
             <button
               type="button"
-              onClick={() => set('abilities', [...data.abilities, { dim: '', points: '' }])}
-              className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
+              onClick={() => set('products', [...data.products, { year: '', role: '', title: '', metric: '', image: '' }])}
+              className={addBtn}
             >
-              + 添加维度
+              + 添加产品
             </button>
           </div>
         </Section>
 
-        <Section title="技能自评" hint="0–100 分，前台渲染为进度条">
+        <Section title="05 专业技能 · 分组标签">
+          <div className="space-y-4">
+            {data.skill_groups.map((g, i) => (
+              <div key={i} className="rounded-xl border border-neutral-100 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={g.title}
+                    onChange={(e) => set('skill_groups', data.skill_groups.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+                    className={inputCls + ' flex-1 font-medium'}
+                    placeholder="分组名"
+                  />
+                  <ItemOps
+                    index={i}
+                    total={data.skill_groups.length}
+                    onMove={(from, to) => set('skill_groups', move(data.skill_groups, from, to))}
+                    onRemove={() => set('skill_groups', data.skill_groups.filter((_, j) => j !== i))}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {g.items.map((item, k) => (
+                    <span key={k} className="inline-flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full border border-neutral-200 text-xs">
+                      <input
+                        value={item}
+                        onChange={(e) =>
+                          set('skill_groups', data.skill_groups.map((x, j) => (j === i ? { ...x, items: x.items.map((y, l) => (l === k ? e.target.value : y)) } : x)))
+                        }
+                        className="w-28 bg-transparent outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => set('skill_groups', data.skill_groups.map((x, j) => (j === i ? { ...x, items: x.items.filter((_, l) => l !== k) } : x)))}
+                        className="w-5 h-5 rounded-full text-neutral-400 hover:text-red-600 hover:bg-red-50 transition text-[10px]"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => set('skill_groups', data.skill_groups.map((x, j) => (j === i ? { ...x, items: [...x.items, ''] } : x)))}
+                    className={addBtn}
+                  >
+                    + 标签
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={() => set('skill_groups', [...data.skill_groups, { title: '', items: [''] }])} className={addBtn}>
+              + 添加分组
+            </button>
+          </div>
+        </Section>
+
+        <Section title="05 专业技能 · 熟练度" hint="0–100 分，黑色面板内渲染为进度条">
           <div className="space-y-2">
             {data.skills.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -444,12 +520,7 @@ export default function AboutEdit() {
                   max={100}
                   value={s.level}
                   onChange={(e) =>
-                    set(
-                      'skills',
-                      data.skills.map((x, j) =>
-                        j === i ? { ...x, level: Math.max(0, Math.min(100, Number(e.target.value) || 0)) } : x,
-                      ),
-                    )
+                    set('skills', data.skills.map((x, j) => (j === i ? { ...x, level: Math.max(0, Math.min(100, Number(e.target.value) || 0)) } : x)))
                   }
                   className={inputCls + ' sm:w-24 shrink-0'}
                 />
@@ -461,23 +532,49 @@ export default function AboutEdit() {
                 />
               </div>
             ))}
-            <button
-              type="button"
-              onClick={() => set('skills', [...data.skills, { name: '', level: 80 }])}
-              className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:border-neutral-500 hover:text-neutral-900 transition"
-            >
+            <button type="button" onClick={() => set('skills', [...data.skills, { name: '', level: 80 }])} className={addBtn}>
               + 添加技能
             </button>
           </div>
         </Section>
 
-        <Section title="差异化">
-          <StringList
-            items={data.differentiators}
-            onChange={(v) => set('differentiators', v)}
-            placeholder="一条差异化优势"
-            area
-          />
+        <Section title="06 底层经历" hint="黑色大块：左侧标题+正文，右侧经历标签">
+          <Field label="标题">
+            <input value={data.field.title} onChange={(e) => set('field', { ...data.field, title: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="正文">
+            <textarea value={data.field.body} rows={3} onChange={(e) => set('field', { ...data.field, body: e.target.value })} className={areaCls} />
+          </Field>
+          <div className="space-y-2">
+            <p className="text-xs text-neutral-400">经历标签</p>
+            {data.field.tags.map((t, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={t}
+                  onChange={(e) => set('field', { ...data.field, tags: data.field.tags.map((x, j) => (j === i ? e.target.value : x)) })}
+                  className={inputCls}
+                />
+                <ItemOps
+                  index={i}
+                  total={data.field.tags.length}
+                  onMove={(from, to) => set('field', { ...data.field, tags: move(data.field.tags, from, to) })}
+                  onRemove={() => set('field', { ...data.field, tags: data.field.tags.filter((_, j) => j !== i) })}
+                />
+              </div>
+            ))}
+            <button type="button" onClick={() => set('field', { ...data.field, tags: [...data.field.tags, ''] })} className={addBtn}>
+              + 添加标签
+            </button>
+          </div>
+        </Section>
+
+        <Section title="结尾">
+          <Field label="主标题">
+            <input value={data.end.title} onChange={(e) => set('end', { ...data.end, title: e.target.value })} className={inputCls} />
+          </Field>
+          <Field label="副标题（灰色斜体行）">
+            <input value={data.end.sub} onChange={(e) => set('end', { ...data.end, sub: e.target.value })} className={inputCls} />
+          </Field>
         </Section>
 
         {/* 底部保存 */}

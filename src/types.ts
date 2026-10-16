@@ -82,26 +82,38 @@ export interface Category {
 // 接口异常时的兜底分类（正常以后台「分类管理」为准）
 export const FALLBACK_CATEGORIES = ['设计', '摄影', '视频', 'AI应用', '数字化', '其他']
 
-// ---------- 关于我（简历页，后台可编辑，存 settings.about JSON） ----------
-export interface AboutStat {
-  num: string
+// ---------- 关于我（简历页 v2：1:1 移植 xie-ke-1 简历项目，存 settings.about JSON） ----------
+export interface AboutPersonalItem {
   label: string
+  value: string
 }
-export interface AboutTimeline {
-  period: string
+export interface AboutStrength {
+  highlight: string
+  title: string
+  body: string
+}
+export interface AboutJob {
+  year: string
   company: string
   role: string
-  desc: string
+  city: string
+  bullets: string[]
 }
-export interface AboutProject {
-  name: string
+export interface AboutResult {
+  value: string
+  label: string
+  note: string
+}
+export interface AboutProduct {
   year: string
   role: string
-  result: string
+  title: string
+  metric: string
+  image: string
 }
-export interface AboutAbility {
-  dim: string
-  points: string
+export interface AboutSkillGroup {
+  title: string
+  items: string[]
 }
 export interface AboutSkill {
   name: string
@@ -109,104 +121,163 @@ export interface AboutSkill {
 }
 export interface AboutData {
   name: string
-  name_en: string
   title: string
-  tagline: string
+  lead: string
+  pdf_url: string // 简历 PDF 下载地址，留空隐藏按钮
   contact_email: string
-  contact_phone: string
   contact_wechat: string
-  stats: AboutStat[]
-  timeline: AboutTimeline[]
-  achievements: string[]
-  projects: AboutProject[]
-  abilities: AboutAbility[]
+  personal: AboutPersonalItem[]
+  strengths: AboutStrength[]
+  jobs: AboutJob[]
+  featured: { title: string; body: string }
+  results: AboutResult[]
+  products: AboutProduct[]
+  skill_groups: AboutSkillGroup[]
   skills: AboutSkill[]
-  differentiators: string[]
+  field: { title: string; body: string; tags: string[] }
+  end: { title: string; sub: string }
 }
 
-// 默认内容 = 简历总结提炼版（后台可随时改，保存后覆盖）
+// 默认内容 = xie-ke-1 简历页 1:1 搬运（后台可改，保存后覆盖）
 export const DEFAULT_ABOUT: AboutData = {
   name: '谢轲',
-  name_en: 'XIE KE',
-  title: '品牌数字化负责人 / 产品经理',
-  tagline:
-    '30 岁，9 年跨领域。从电子厂流水线、京东仓储一路走到品牌中台，跑通「实体一线 → 视觉设计 → 产品开发 → 业务系统 → AI 落地」全链路。近三年在茶企从子品牌一人全包做起，主导散茶转礼品茶，因通用系统接不住非标业务而自研系统，帮企业告别纸质办公，获公司唯一专项奖金。近期完成 DeepSeek R1 + 千问多模态本地部署，搭 Dify 企业 AI 工作台。',
+  title: '品牌数字化负责人 / 数字化产品 / 产品开发',
+  lead: '9 年跨领域实战经验，覆盖品牌视觉、产品开发、电商、供应链、业务系统与 AI。长期在实体企业一线，把真实问题转化为产品、流程与可使用的数字化工具。',
+  pdf_url: '/xie-ke-resume.pdf',
   contact_email: '983047904@qq.com',
-  contact_phone: '173-5348-5216',
   contact_wechat: 'MuYo0402',
-  stats: [
-    { num: '1000+', label: '年均上新产品（款），拍摄剪辑全本人完成' },
-    { num: '95%', label: '在售包装由本人独立设计，年售罄率 95%+' },
-    { num: '10 分钟', label: '对账耗时（原 2 天）' },
-    { num: '≈0', label: '漏单率（原 10%）' },
-    { num: '80%+', label: '礼品茶占比（原 10–20%）' },
+  personal: [
+    { label: '姓名', value: '谢轲' },
+    { label: '出生年份', value: '1996 年' },
+    { label: '学历', value: '齐鲁工业大学｜视觉传达设计' },
+    { label: '在校经历', value: '班长' },
+    { label: '目前所在地', value: '济南' },
+    { label: '目标城市', value: '杭州' },
+    { label: '期望职位', value: '品牌数字化负责人 / 数字化产品经理 / 产品开发经理 / 品牌中台运营' },
+    { label: '联系方式', value: '983047904@qq.com' },
+    { label: '微信', value: 'MuYo0402' },
   ],
-  timeline: [
+  strengths: [
+    { highlight: '实体业务', title: '懂实体业务，不只懂设计', body: '从电子厂、仓储一线，到设计、产品、供应链、销售与数字化，能从真实业务现场判断问题，而不是只从软件功能出发。' },
+    { highlight: '设计 → 产品 → 开发', title: '设计 → 产品 → 开发闭环', body: '具备视觉设计底盘，同时能梳理需求、设计流程与交互，并借助 AI 完成 Web、业务系统与个人应用的开发落地。' },
+    { highlight: '供应链落地', title: '能把产品做到供应链落地', body: '参与原料、包材、工艺、成本、供应商与生产周期管理，理解一个产品从想法到生产、入库、销售的完整链路。' },
+    { highlight: '数字化实战', title: '数字化不是概念，而是实际使用', body: '从报价工具切入，逐步建设销售系统与综合管理系统，并根据各部门真实反馈持续迭代、部署和维护。' },
+    { highlight: 'AI 工作流', title: 'AI 已进入实际工作流', body: '完成本地大模型、Dify 工作台等实践，正在推进企业知识库、RAG、Agent 与业务自动化，让 AI 成为业务基础能力。' },
+    { highlight: '结果意识', title: '结果意识强，习惯用数据复盘', body: '关注效率、成本、转化、产品结构与流程闭环，把项目成果尽量转化为可被招聘者快速理解的业务指标。' },
+  ],
+  jobs: [
     {
-      period: '2023.10 – 至今',
+      year: '2023.10–至今',
       company: '中益茶业（西双版纳）',
       role: '产品设计负责人 → 品牌数字化负责人',
-      desc: '子品牌一人全包（年均上新 1000+ 款）；主导散茶转礼品茶；自研综合管理 + 销售系统；落地企业 AI 知识库；获公司唯一专项奖金。',
+      city: '济南',
+      bullets: [
+        '入职初期负责旗下子品牌产品设计与内容生产，后因业务表现进入总公司，逐步承担产品创新、品牌内容与数字化升级工作。',
+        '主导散茶向礼品茶转型，从产品组合、包装形态、包材工艺、内容表达与销售协同多个环节推进，礼品茶业务占比由约 10–20% 提升至 80%+。',
+        '负责原料、包材、工艺、成本核算及供应商沟通，管理 10+ 包装与配套供应商；纸类耗材约 -15%、生产周期约 -15%、采购综合成本约 -10%。',
+        '年均上新 1000+ 款，产品摄影与视频内容持续由本人完成；在售包装约 95% 由本人独立设计，2025 年 47 天完成 38 款包装设计。',
+        '从报价单工具开始，自研报价单系统、销售管理系统、综合管理系统，并负责产品、需求、开发、部署、权限、反馈与持续迭代。',
+        '完成品牌官网从设计到开发、腾讯云部署、Nginx、HTTPS 与备案；推进企业 AI 知识库、本地大模型、Dify、RAG 与 Agent。',
+      ],
     },
     {
-      period: '2022.10 – 2023.09',
+      year: '2022.10–2023.09',
       company: '知岐健康产业（山东）集团',
       role: '品牌设计主管',
-      desc: '企业官网后台运维、公众号内容策划与发布；搭建品牌 VI 体系，输出画册、产品包装、电商推广物料；承接活动实拍与视频剪辑。',
+      city: '济南',
+      bullets: [
+        '负责企业官网后台运维、公众号内容策划与发布，保障品牌线上内容持续更新。',
+        '搭建品牌 VI 体系，输出画册、产品包装、电商推广物料与日常视觉内容。',
+        '承接活动现场拍摄、视频剪辑，并协同团队完成活动策划与执行落地。',
+      ],
     },
     {
-      period: '2019.10 – 2022.09',
+      year: '2019.10–2022.09',
       company: '济南汉磁生物科技',
       role: '美工 / 电商设计师',
-      desc: '京东、天猫店铺视觉建设，深度参与 618、双 11 大促全周期；产出包装、宣传手册、线下广告牌、企业官网全套品牌物料；连续两年独立统筹公司年会。',
+      city: '济南',
+      bullets: [
+        '负责京东、天猫店铺视觉建设，覆盖首页、详情页、活动专题等核心电商页面。',
+        '深度参与 618、双 11 等大促全周期，结合平台节奏完成视觉与推广物料交付。',
+        '输出产品包装、宣传手册、线下广告牌、企业官网等品牌物料，并参与企业活动视觉统筹。',
+        '连续两年独立统筹公司年会，覆盖舞台视觉、流程规划、人员分工、灯光与大屏等执行环节；参与全国经销商大会策划。',
+      ],
     },
     {
-      period: '2017.11 – 2018.11',
-      company: '北斗正明科技（北京）',
+      year: '2019 上半年',
+      company: '福牌阿胶',
+      role: '产品 / 包装设计',
+      city: '济南平阴',
+      bullets: [
+        '负责产品包装开发、产品落地、官网视觉、商业拍摄与企业会议宣传。',
+        '设计产出的产品包装获得经销商积极反馈，进一步强化了产品、包装与市场之间的联系。',
+      ],
+    },
+    {
+      year: '2018.11–2019.03',
+      company: '青岛创智空间有限公司',
+      role: '设计师（进修）',
+      city: '青岛',
+      bullets: [
+        '在乙方设计公司参与客户品牌宣传物料交付，系统补强商业设计能力。',
+        '跟随正邦出身设计总监学习商业摄影、视频剪辑、电商设计，完成商品精修、人像调色、商业海报等商业交付。',
+      ],
+    },
+    {
+      year: '2017.11–2018.11',
+      company: '北斗正明科技发展有限公司',
       role: '电商视觉设计',
-      desc: '京东、天猫、拼多多店铺整体视觉搭建；产出首页、详情页、活动 Banner 与产品短视频；服务厨具、水杯、日用百货类目。',
+      city: '北京',
+      bullets: [
+        '负责京东、天猫、拼多多店铺整体视觉搭建，输出首页、详情页、活动 Banner。',
+        '完成产品短视频拍摄与剪辑，并输出宣传单、包装、户外广告等线下物料。',
+        '服务厨具、水杯、日用百货等消费品类目，建立电商视觉与商业交付基础。',
+      ],
     },
   ],
-  achievements: [
-    '一人全包起盘：子品牌产品设计与内容生产全部独立负责，2025 年 47 天交付 38 款包装。',
-    '包装话语权：在售包装 95% 本人独立设计，覆盖纸质礼盒 / 木盒 / 瓷罐 / 简装全品类，年售罄率 95%+。',
-    '业务结构翻转：散茶 → 礼品茶，占比 10–20% → 80%+；任职期间公司营收数百万 → 数千万。',
-    '团队与角色：团队 1 人扩至 3–4 人（AI 图像 / 视频生成、产品开发）；贯通「包装设计 → 产品开发 → 包材工艺 → 成本核算 → 供应链 → 周期管理 → 出入库」全链路。',
-    '系统自研：先引入 CRM / ERP，因非标流程接不住，自研综合管理系统（12 模块）+ 销售系统。',
-    'AI 落地：DeepSeek R1 + Qwen2.5 VL 本地部署，Dify 工作台，推进 RAG 与业务 Agent。',
+  featured: {
+    title: '作品库（本站）',
+    body: '从视觉设计、信息架构到开发、部署、HTTPS 与备案，独立把个人作品与简历做成真正可运行的数字产品。',
+  },
+  results: [
+    { value: '1000+', label: '年均上新产品', note: '产品开发、包装、摄影与视频内容持续协同。' },
+    { value: '95%', label: '在售包装独立设计', note: '覆盖纸盒、木盒、瓷罐、简装、纸箱与包装袋等。' },
+    { value: '2 天 → 10 分钟', label: '对账耗时', note: '统一产品、订单、库存与业务数据链路。' },
+    { value: '10% → ≈0', label: '订单漏单率', note: '通过订单、库存与任务状态关联减少遗漏。' },
+    { value: '10–20% → 80%+', label: '礼品茶业务占比', note: '参与产品组合、包装与内容表达的业务转型。' },
+    { value: '3 套', label: '自研企业业务系统', note: '报价单、销售管理、综合管理，从工具逐步形成平台。' },
   ],
-  projects: [
-    { name: '中益综合管理系统', year: '2026 – 至今', role: '产品 / 全栈 / 运维', result: '12 模块，对账 2 天→10 分钟，漏单 10%→0，全公司使用，获唯一专项奖金' },
-    { name: '销售管理系统', year: '2026 – 至今', role: '产品 / 全栈', result: '高德 API 代理地图 + 5km 区域保护自动校验，货品追踪 + 业绩统计' },
-    { name: '报价单系统', year: '2026 – 至今', role: '产品 / 全栈', result: '报价 1 天 → 数分钟，首套自研工具，验证数字化价值' },
-    { name: '礼品茶产品线转型', year: '2024 – 至今', role: '产品负责人', result: '8 类包装形态 × 5 类茶品，礼品茶 80%+，好评 90%+，纸耗 -15%' },
-    { name: '品牌官网', year: '2026 – 至今', role: '设计 / 开发 / 部署 / 运维', result: 'Next.js 15 自建站点，摆脱第三方建站工单依赖' },
-    { name: '企业 AI 知识库', year: '2026 – 至今', role: '架构 / 部署 / Agent', result: 'Ollama + Dify，数据不出内网，RAG / Agent 推进中' },
-    { name: '本地记账 APP', year: '2026', role: '独立开发', result: '数据不上传，稳定自用数月' },
-    { name: '本地密码库 APP', year: '2026', role: '独立开发', result: '本地加密，指纹 / 人脸，管理数十平台账号' },
-    { name: '微信小游戏（农场）', year: '2026 – 至今', role: 'UI + AI 辅助开发', result: 'Cocos 3.8.8，主界面已完成，目标上架' },
+  products: [
+    { year: '2026', role: '独立开发', title: '本地记账 APP', metric: '本地数据 / 稳定自用数月', image: '/app-bookkeeping.svg' },
+    { year: '2026', role: '独立开发', title: '本地密码库 APP', metric: '本地加密 / 指纹人脸', image: '/app-password.svg' },
+    { year: '2026–至今', role: 'UI / AI 辅助开发', title: '微信小游戏｜农场', metric: 'Cocos 3.8.8', image: '/app-farm.svg' },
   ],
-  abilities: [
-    { dim: '产品开发与供应链', points: '原料选型、包材工艺、成本测算、供应商落地（纸耗 -15%、周期 -15%、成本 -10%）' },
-    { dim: '品牌视觉与内容中台', points: 'VI、包装、电商视觉、商业摄影（点击率 +30%、播放 5 万+）' },
-    { dim: 'AI 系统与流程重构', points: '业务调研、自研系统、官网、云部署、本地大模型、RAG、Agent、Dify' },
-    { dim: '电商与数字化运营', points: '天猫京东逻辑、618 / 双 11 全周期、转化分析、年会与经销商大会统筹' },
+  skill_groups: [
+    { title: '设计与内容', items: ['Photoshop（精通）', 'Illustrator（精通）', 'Premiere Pro', 'After Effects', 'Cinema 4D', '商业摄影', '视频拍摄与剪辑'] },
+    { title: '产品与业务', items: ['产品开发', '包装设计', '包材与工艺', '成本核算', '供应商协同', '电商运营逻辑', '业务流程梳理'] },
+    { title: 'AI 与产品开发', items: ['GPT / Claude Code', 'Codex / Trae', 'DeepSeek', 'Ollama', 'Dify', 'RAG / Agent', 'Qwen2.5-VL', 'AI 辅助开发'] },
+    { title: '开发与部署', items: ['Python / Flask', 'Next.js / React', 'Node.js', 'SQLite / 数据库', '腾讯云', 'Nginx', 'HTTPS / ICP 备案', 'Cocos 3.8.8'] },
   ],
   skills: [
-    { name: 'Photoshop', level: 95 },
-    { name: 'Illustrator', level: 92 },
+    { name: 'PS', level: 95 },
+    { name: 'AI', level: 92 },
     { name: '商业摄影', level: 88 },
     { name: '视频剪辑', level: 85 },
     { name: 'GPT / Claude Code', level: 90 },
     { name: 'Dify / RAG / Agent', level: 85 },
-    { name: 'Ollama 本地部署', level: 82 },
+    { name: 'Ollama', level: 82 },
+    { name: 'Qwen2.5 VL', level: 78 },
     { name: 'Python / Flask', level: 75 },
     { name: 'Next.js / React', level: 75 },
+    { name: '腾讯云部署运维', level: 70 },
   ],
-  differentiators: [
-    '一线出身：电子厂流水线 + 京东仓库 + 高端餐厅服务员，懂实体工厂与仓储的真实痛点。',
-    '不是买系统，是自己造：先上 CRM/ERP，发现非标接不住，才自研 12 模块平台。',
-    '设计 → 开发闭环：借 AI 独立完成两个 APP，Cocos 小游戏开发中。',
-    'AI 真落地：本地显卡推理、数据不出内网、Dify 编排，往 RAG 与业务 Agent 走。',
-  ],
+  field: {
+    title: '我不是从办公室开始理解实体业务的。',
+    body: '大学及早期工作阶段，曾在真实的一线岗位服务：电子厂、仓储与高端餐饮。后来进入设计、产品、供应链与数字化，这些经历让我更容易理解生产、仓库、交付和一线协作中的真实问题。',
+    tags: ['烟台 LG 屏幕组装厂', '上海昌硕', '京东仓储｜河北固安', '青岛名家餐饮｜高端服务业'],
+  },
+  end: {
+    title: '把问题做成真正能用的东西。',
+    sub: '希望把设计、产品、数字化与 AI，继续放进真实业务里。',
+  },
 }

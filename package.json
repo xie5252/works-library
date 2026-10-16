@@ -20,6 +20,7 @@
     "@hono/vite-dev-server": "^0.26.1",
     "better-sqlite3": "^13.0.3",
     "hono": "^4.13.13",
+    "lucide-react": "^1.58.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-easy-crop": "^6.2.3",
