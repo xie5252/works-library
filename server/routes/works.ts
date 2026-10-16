@@ -40,6 +40,7 @@ export function parseRow(r: WorkRow) {
     bg_theme: r.bg_theme === 'dark' ? 'dark' : 'light',
     created_at: r.created_at,
     updated_at: r.updated_at,
+    views: r.views ?? 0,
     deleted_at: r.deleted_at,
   }
 }
@@ -86,7 +87,35 @@ works.get('/works/:slug', async (c) => {
     c.req.param('slug'),
   )
   if (!r) return c.json({ error: '作品不存在' }, 404)
-  return c.json(parseRow(r))
+  // 浏览统计：详情每访问一次 +1（失败不影响正常访问）
+  let views = r.views ?? 0
+  try {
+    // 东八区日期，避免 UTC 导致晚间访问记到前一天
+    const date = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+    await qRun(c.env.DB, 'UPDATE works SET views = COALESCE(views, 0) + 1 WHERE id=?', r.id)
+    await qRun(
+      c.env.DB,
+      `INSERT INTO stats_daily (date, views) VALUES (?, 1)
+       ON CONFLICT(date) DO UPDATE SET views = views + 1`,
+      date,
+    )
+    views += 1
+  } catch {
+    // 统计失败静默
+  }
+  return c.json({ ...parseRow(r), views })
+})
+
+// 浏览汇总（后台）：总浏览 + 今日浏览
+works.get('/admin/stats', requireAuth, async (c) => {
+  const date = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+  const total = await qGet<{ v: number }>(c.env.DB, 'SELECT COALESCE(SUM(views), 0) AS v FROM works')
+  const today = await qGet<{ v: number }>(
+    c.env.DB,
+    'SELECT views AS v FROM stats_daily WHERE date=?',
+    date,
+  )
+  return c.json({ total_views: total?.v ?? 0, today_views: today?.v ?? 0 })
 })
 
 // ---------- 后台接口（含草稿） ----------

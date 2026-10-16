@@ -6,16 +6,18 @@ import { ToastContainer, useToasts } from './Toast'
 import AdminNoindex from './AdminNoindex'
 
 export default function AdminLayout() {
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '', media_cdn: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '', media_cdn: '', about_enabled: '0' })
   const navigate = useNavigate()
   const location = useLocation()
   const { items, show } = useToasts()
 
-  const active: 'works' | 'settings' | 'trash' = location.pathname.startsWith('/admin/trash')
+  const active: 'works' | 'settings' | 'trash' | 'about' = location.pathname.startsWith('/admin/trash')
     ? 'trash'
     : location.pathname.startsWith('/admin/settings')
       ? 'settings'
-      : 'works'
+      : location.pathname.startsWith('/admin/about')
+        ? 'about'
+        : 'works'
 
   useEffect(() => {
     api<SiteSettings>('/api/admin/settings').then(setSettings).catch(() => {})
@@ -62,6 +64,9 @@ export default function AdminLayout() {
             </Link>
             <Link to="/admin/trash" className={navCls(active === 'trash')}>
               回收站
+            </Link>
+            <Link to="/admin/about" className={navCls(active === 'about')}>
+              关于我
             </Link>
             <Link to="/admin/settings" className={navCls(active === 'settings')}>
               设置

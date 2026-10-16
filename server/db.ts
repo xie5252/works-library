@@ -54,6 +54,7 @@ export interface WorkRow {
   bg_theme: 'light' | 'dark'
   created_at: string
   updated_at: string
+  views?: number
   deleted_at: string | null
 }
 

@@ -14,7 +14,13 @@ CREATE TABLE IF NOT EXISTS works (
   bg_theme TEXT NOT NULL DEFAULT 'light',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
   deleted_at TEXT
+);
+-- 每日浏览汇总（date = YYYY-MM-DD，东八区）
+CREATE TABLE IF NOT EXISTS stats_daily (
+  date TEXT PRIMARY KEY,
+  views INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,

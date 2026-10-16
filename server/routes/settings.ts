@@ -4,18 +4,19 @@ import { requireAuth } from './auth'
 
 const settings = new Hono<{ Bindings: Env }>()
 
-const PUBLIC_KEYS = ['logo', 'site_name', 'site_name_en', 'footer_text', 'footer_credit', 'beian_no', 'media_cdn']
+const PUBLIC_KEYS = ['logo', 'site_name', 'site_name_en', 'footer_text', 'footer_credit', 'beian_no', 'media_cdn', 'about', 'about_enabled']
 // 仅管理端可见的键（不进公开接口，避免泄露上传中转凭证）
 const ADMIN_KEYS = ['relay_token']
 
-// 公开接口：前台读取 Logo、网站名称、英文副标题、版权署名、页脚文字、备案号、媒体 CDN 域名
+// 公开接口：前台读取 Logo、网站名称、英文副标题、版权署名、页脚文字、备案号、媒体 CDN 域名、关于我
 settings.get('/settings', async (c) => {
   const rows = await qAll<{ key: string; value: string }>(
     c.env.DB,
-    `SELECT key, value FROM settings WHERE key IN ('logo','site_name','site_name_en','footer_text','footer_credit','beian_no','media_cdn')`,
+    `SELECT key, value FROM settings WHERE key IN ('logo','site_name','site_name_en','footer_text','footer_credit','beian_no','media_cdn','about','about_enabled')`,
   )
   const obj: Record<string, string> = {}
   for (const r of rows) obj[r.key] = r.value
+  const aboutEnabled = obj.about_enabled === '1'
   return c.json({
     logo: obj.logo || null,
     site_name: obj.site_name || '作品库',
@@ -24,6 +25,9 @@ settings.get('/settings', async (c) => {
     footer_credit: obj.footer_credit || '',
     beian_no: obj.beian_no || '',
     media_cdn: obj.media_cdn || '',
+    about_enabled: aboutEnabled ? '1' : '0',
+    // 关闭状态不下发简历内容，避免泄露
+    about: aboutEnabled ? obj.about || '' : '',
   })
 })
 
@@ -36,6 +40,8 @@ settings.put('/settings', requireAuth, async (c) => {
     footer_credit?: string
     beian_no?: string
     media_cdn?: string
+    about?: string
+    about_enabled?: string
     relay_token?: string
   }>()
   const allKeys = [...PUBLIC_KEYS, ...ADMIN_KEYS]

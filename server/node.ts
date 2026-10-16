@@ -4,6 +4,7 @@
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import path from 'node:path'
+import Database from 'better-sqlite3'
 import worker from './worker'
 import type { Env } from './db'
 import { LocalD1, LocalR2 } from './adapters/local'
@@ -15,6 +16,24 @@ const secret = process.env.SECRET
 if (!secret) {
   console.error('[启动失败] 缺少 SECRET 环境变量（登录 cookie 签名密钥）')
   process.exit(1)
+}
+
+// 启动迁移：老库自动补齐新增列/表（幂等，可重复执行）
+{
+  const m = new Database(dbPath)
+  m.pragma('journal_mode = WAL')
+  const cols = m.pragma('table_info(works)') as { name: string }[]
+  if (Array.isArray(cols) && cols.length > 0 && !cols.some((c) => c.name === 'views')) {
+    m.exec('ALTER TABLE works ADD COLUMN views INTEGER NOT NULL DEFAULT 0')
+    console.log('[迁移] works 已添加 views 列')
+  }
+  m.exec(
+    `CREATE TABLE IF NOT EXISTS stats_daily (
+       date TEXT PRIMARY KEY,
+       views INTEGER NOT NULL DEFAULT 0
+     )`,
+  )
+  m.close()
 }
 
 const env = {

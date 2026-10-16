@@ -17,6 +17,8 @@ export default function AdminWorkList() {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('全部')
   const [cats, setCats] = useState<Category[]>([])
+  // 浏览汇总（总浏览 / 今日浏览）
+  const [stats, setStats] = useState<{ total_views: number; today_views: number } | null>(null)
   // 筛选栏动态读取分类表（设置里加/删分类后这里跟着变）
   const catNames = ['全部', ...cats.map((c) => c.name)]
   const [view, setView] = useState<'list' | 'grid'>(() =>
@@ -38,6 +40,9 @@ export default function AdminWorkList() {
   useEffect(() => {
     api<Category[]>('/api/categories')
       .then(setCats)
+      .catch(() => {})
+    api<{ total_views: number; today_views: number }>('/api/admin/stats')
+      .then(setStats)
       .catch(() => {})
   }, [])
 
@@ -111,7 +116,15 @@ export default function AdminWorkList() {
       <ToastContainer items={items} />
       <main className="max-w-6xl mx-auto px-5 sm:px-8 py-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">作品管理</h1>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">作品管理</h1>
+            {stats && (
+              <p className="text-xs text-neutral-400 mt-1.5">
+                总浏览 <span className="tabular-nums text-neutral-600">{stats.total_views.toLocaleString()}</span>
+                {' · '}今日 <span className="tabular-nums text-neutral-600">{stats.today_views.toLocaleString()}</span>
+              </p>
+            )}
+          </div>
           <Link
             to="/admin/works/new"
             className="h-10 px-5 inline-flex items-center rounded-xl bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 transition"
@@ -277,7 +290,7 @@ function ListRow({
           </span>
         </div>
         <p className="text-xs text-neutral-400 mt-1">
-          {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · 更新于 {formatDateTime(w.updated_at)}
+          {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · 浏览 {w.views ?? 0} · 更新于 {formatDateTime(w.updated_at)}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
@@ -428,7 +441,7 @@ function GridCards({
               {w.title}
             </h3>
             <p className="text-xs text-neutral-400 mt-1">
-              {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · {formatDateTime(w.updated_at)}
+              {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · 浏览 {w.views ?? 0} · {formatDateTime(w.updated_at)}
             </p>
           </div>
         </div>

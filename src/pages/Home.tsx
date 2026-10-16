@@ -10,7 +10,7 @@ import CategoryIcon from '../components/CategoryIcon'
 const SIDEBAR_KEY = 'worklib_sidebar_open'
 
 export default function Home() {
-  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '', media_cdn: '' })
+  const [settings, setSettings] = useState<SiteSettings>({ logo: null, site_name: '作品库', site_name_en: '', footer_text: '', footer_credit: '', beian_no: '', media_cdn: '', about_enabled: '0' })
   const footerText = settings.footer_text
   const [cats, setCats] = useState<string[]>(FALLBACK_CATEGORIES)
   const [works, setWorks] = useState<Work[]>([])
@@ -218,6 +218,31 @@ export default function Home() {
             </p>
           )}
           {cats.map((c) => catBtn(c, c, open))}
+          {settings.about_enabled === '1' && (
+            open ? (
+              <Link
+                to="/about"
+                className="w-full flex items-center gap-3 h-9 px-2.5 rounded-lg text-sm transition text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
+                </svg>
+                <span className="truncate">关于我</span>
+              </Link>
+            ) : (
+              <Link
+                to="/about"
+                title="关于我"
+                className="w-10 h-10 mx-auto flex items-center justify-center rounded-lg transition text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
+              >
+                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
+                </svg>
+              </Link>
+            )
+          )}
         </nav>
         {/* 版权署名 */}
         <div
@@ -271,6 +296,14 @@ export default function Home() {
               </span>
             </Link>
             <div className="flex-1" />
+            {settings.about_enabled === '1' && (
+              <Link
+                to="/about"
+                className="text-sm text-neutral-500 hover:text-neutral-900 transition shrink-0"
+              >
+                关于我
+              </Link>
+            )}
           </div>
           <div className="px-4 pb-3">
             <input

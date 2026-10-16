@@ -116,7 +116,7 @@ auth.post('/login', async (c) => {
   await setSignedCookie(c, 'session', 'admin', c.env.SECRET, {
     httpOnly: true,
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 24, // 1 天（过期需重新登录）
     sameSite: 'Lax',
     secure: c.env.COOKIE_SECURE === '1',
   })
