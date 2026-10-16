@@ -4,6 +4,9 @@
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import path from 'node:path'
+import { createReadStream } from 'node:fs'
+import { stat } from 'node:fs/promises'
+import { Readable } from 'node:stream'
 import Database from 'better-sqlite3'
 import worker from './worker'
 import type { Env } from './db'
@@ -11,6 +14,7 @@ import { LocalD1, LocalR2 } from './adapters/local'
 
 const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'data', 'works.db')
 const mediaDir = process.env.MEDIA_DIR || path.join(process.cwd(), 'media')
+const distDir = path.join(process.cwd(), 'dist')
 const secret = process.env.SECRET
 
 if (!secret) {
@@ -44,6 +48,45 @@ const env = {
 } as unknown as Env
 
 const app = new Hono<{ Bindings: Env }>()
+
+// 静态资源（dist）：生产由 nginx 直接托管，这里兜底——本地预览无需 nginx 也能看
+const STATIC_TYPES: Record<string, string> = {
+  html: 'text/html; charset=utf-8',
+  js: 'text/javascript',
+  css: 'text/css',
+  json: 'application/json',
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  ico: 'image/x-icon',
+  woff2: 'font/woff2',
+  txt: 'text/plain; charset=utf-8',
+}
+app.get('*', async (c, next) => {
+  const p = c.req.path
+  if (p.startsWith('/api/') || p.startsWith('/media/')) return next()
+  if (p.includes('..') || p.includes('\\')) return next()
+  const rel = p === '/' ? 'index.html' : p.slice(1)
+  let file = path.join(distDir, rel)
+  try {
+    const s = await stat(file)
+    if (s.isDirectory()) return next()
+  } catch {
+    // 不存在 → SPA 回退 index.html（/work/xxx、/about 等前端路由）
+    file = path.join(distDir, 'index.html')
+  }
+  const ext = (file.split('.').pop() || '').toLowerCase()
+  const stream = Readable.toWeb(createReadStream(file)) as unknown as ReadableStream
+  const headers = new Headers()
+  headers.set('content-type', STATIC_TYPES[ext] || 'application/octet-stream')
+  // 指纹命名的 assets 可长缓存，index.html 不缓存保证发版即生效
+  if (p.startsWith('/assets/')) headers.set('cache-control', 'public, max-age=31536000, immutable')
+  else headers.set('cache-control', 'no-cache')
+  return new Response(stream, { headers })
+})
+
 app.all('*', (c) => worker.fetch(c.req.raw, env))
 
 const port = Number(process.env.PORT || 8788)
