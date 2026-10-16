@@ -71,10 +71,10 @@ export default function Home() {
 
   // 渲染前统一重写媒体 URL（后台配置了 CDN 域名时，图片/视频走国内加速节点）
   const viewWorks = useMemo(() => rewriteMedia(settings.media_cdn, works), [settings.media_cdn, works])
-  // 精选（后台星标 featured_order）与常规作品分组：首页默认视图与分类筛选均分区，搜索时平铺
+  // 星标分区只在「全部作品」默认视图生效；分类页＝纯时间线（按更新时间从新到旧），搜索时平铺
   const featuredWorks = viewWorks.filter((w) => w.featured_order != null)
   const restWorks = viewWorks.filter((w) => w.featured_order == null)
-  const showSections = !q && featuredWorks.length > 0
+  const showSections = !q && !category && featuredWorks.length > 0
   const gridCls = 'grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5 px-px'
 
   const card = (w: Work, i: number) => (

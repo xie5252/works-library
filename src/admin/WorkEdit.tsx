@@ -21,7 +21,7 @@ interface FormState {
 
 const EMPTY: FormState = {
   title: '',
-  categories: ['其他'],
+  categories: [],
   tags: [],
   cover: null,
   cover_source: null,
@@ -119,6 +119,10 @@ export default function AdminWorkEdit() {
   }, [form, dirty, doSave])
 
   const publish = async () => {
+    if (form.categories.length === 0) {
+      show('请至少选择一个分类再发布', 'error')
+      return
+    }
     const ok = await doSave({ status: 'published' })
     if (ok) setPubOk({ slug: slugRef.current, title: form.title.trim() || '未命名作品' })
   }
