@@ -69,8 +69,12 @@ works.get('/works', async (c) => {
     sql += SEARCH_SQL
     params.push(like, like, like, like, like)
   }
-  // 精选置顶：featured_order 小者在前，非精选按时间
-  sql += ' ORDER BY (featured_order IS NULL), featured_order ASC, updated_at DESC'
+  // 排序：默认视图（无分类筛选、无搜索）精选置顶；分类筛选/搜索 = 纯时间线（更新时间从新到旧）
+  if (!category && !q) {
+    sql += ' ORDER BY (featured_order IS NULL), featured_order ASC, updated_at DESC'
+  } else {
+    sql += ' ORDER BY updated_at DESC'
+  }
   const rows = await qAll<WorkRow>(c.env.DB, sql, ...params)
   return c.json(rows.map(parseRow))
 })
