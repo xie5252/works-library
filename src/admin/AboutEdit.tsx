@@ -15,6 +15,7 @@ function normalize(raw: unknown): AboutData {
     title: o.title ?? d.title,
     lead: o.lead ?? d.lead,
     pdf_url: o.pdf_url ?? d.pdf_url,
+    pdf_name: o.pdf_name ?? d.pdf_name,
     contact_email: o.contact_email ?? d.contact_email,
     contact_wechat: o.contact_wechat ?? d.contact_wechat,
     show_wechat: o.show_wechat ?? d.show_wechat,
@@ -185,6 +186,9 @@ export default function AboutEdit() {
           </Field>
           <Field label="简历 PDF 地址（留空隐藏下载按钮）">
             <input value={data.pdf_url} onChange={(e) => set('pdf_url', e.target.value)} className={inputCls} placeholder="/xie-ke-resume.pdf" />
+          </Field>
+          <Field label="下载文件名（HR 下载后看到的名字，建议：姓名_岗位_亮点）">
+            <input value={data.pdf_name} onChange={(e) => set('pdf_name', e.target.value)} className={inputCls} placeholder="谢轲_品牌数字化负责人_9年数字化实战.pdf" />
           </Field>
           <Field label="邮箱">
             <input value={data.contact_email} onChange={(e) => set('contact_email', e.target.value)} className={inputCls} />

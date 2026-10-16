@@ -117,6 +117,7 @@ export interface AboutData {
   title: string
   lead: string
   pdf_url: string // 简历 PDF 下载地址，留空隐藏按钮
+  pdf_name: string // 下载保存的文件名（HR 下载后看到的名字）
   contact_email: string
   contact_wechat: string
   show_wechat: string // '1' 显示微信行 / '0' 隐藏（安全开关）
@@ -137,6 +138,7 @@ export const DEFAULT_ABOUT: AboutData = {
   title: '品牌数字化负责人 / 数字化产品 / 产品开发',
   lead: '品牌视觉与内容出身，9 年跨领域实战，覆盖产品开发、电商、供应链、业务系统与 AI；从设计做到供应链落地，再用数字化和 AI 把整条链路重做一遍。长期在实体企业一线，把真实问题转化为产品、流程与可使用的数字化工具。',
   pdf_url: '/xie-ke-resume.pdf',
+  pdf_name: '谢轲_品牌数字化负责人_9年数字化实战.pdf',
   contact_email: '983047904@qq.com',
   contact_wechat: 'MuYo0402',
   show_wechat: '0',

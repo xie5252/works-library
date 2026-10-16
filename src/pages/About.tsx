@@ -23,6 +23,7 @@ function normalize(raw: unknown): AboutData {
     title: o.title ?? d.title,
     lead: o.lead ?? d.lead,
     pdf_url: o.pdf_url ?? d.pdf_url,
+    pdf_name: o.pdf_name ?? d.pdf_name,
     contact_email: o.contact_email ?? d.contact_email,
     contact_wechat: o.contact_wechat ?? d.contact_wechat,
     show_wechat: o.show_wechat ?? d.show_wechat,
@@ -96,7 +97,7 @@ export default function About() {
             <p className="resume-lead">{a.lead}</p>
           </div>
           {a.pdf_url && (
-            <a href={a.pdf_url} download className="pill-black">
+            <a href={a.pdf_url} download={a.pdf_name || undefined} className="pill-black">
               <Download size={15} /> 下载 PDF
             </a>
           )}
