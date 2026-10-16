@@ -273,12 +273,28 @@ export default function WorkDetail() {
               </button>
             ))}
           </nav>
-          <Link
-            to="/"
-            className="md:hidden text-sm text-neutral-500 hover:text-neutral-900 transition shrink-0"
-          >
-            ← 返回
-          </Link>
+          {settings.about_enabled === '1' && (
+            <Link
+              to="/about"
+              className="hidden md:inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-900 transition shrink-0"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
+              </svg>
+              关于我
+            </Link>
+          )}
+          <div className="md:hidden flex items-center gap-4 shrink-0">
+            {settings.about_enabled === '1' && (
+              <Link to="/about" className="text-sm text-neutral-500 hover:text-neutral-900 transition">
+                关于我
+              </Link>
+            )}
+            <Link to="/" className="text-sm text-neutral-500 hover:text-neutral-900 transition">
+              ← 返回
+            </Link>
+          </div>
         </div>
         {/* 手机端分类切换 */}
         <div className="md:hidden flex gap-5 overflow-x-auto [scrollbar-width:none] border-t border-neutral-100 px-4">

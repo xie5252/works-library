@@ -212,6 +212,33 @@ export default function Home() {
         </div>
         <nav className={'flex-1 overflow-y-auto py-3 ' + (open ? 'px-3' : 'px-2')}>
           {catBtn('', '全部作品', open)}
+          {/* 关于我：紧贴全部作品下方，边框胶囊样式与分类行区分 */}
+          {settings.about_enabled === '1' && (
+            open ? (
+              <Link
+                to="/about"
+                className="mt-2.5 mb-1 w-full flex items-center gap-2.5 h-10 px-3 rounded-xl border border-neutral-200 bg-white text-sm text-neutral-600 hover:border-neutral-900 hover:text-neutral-900 transition"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
+                </svg>
+                <span className="truncate">关于我</span>
+                <span className="ml-auto text-neutral-300 text-xs">→</span>
+              </Link>
+            ) : (
+              <Link
+                to="/about"
+                title="关于我"
+                className="w-10 h-10 mx-auto mt-2.5 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-500 hover:border-neutral-900 hover:text-neutral-900 transition"
+              >
+                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
+                </svg>
+              </Link>
+            )
+          )}
           {open && (
             <p className="px-2.5 pt-4 pb-2 text-[11px] font-medium tracking-widest text-neutral-300">
               分类
@@ -219,36 +246,6 @@ export default function Home() {
           )}
           {cats.map((c) => catBtn(c, c, open))}
         </nav>
-        {/* 关于我：沉底独立区，与分类导航分开 */}
-        {settings.about_enabled === '1' && (
-          <div className="shrink-0 border-t border-neutral-100 pt-2 pb-1">
-            {open ? (
-              <div className="px-3">
-                <Link
-                  to="/about"
-                  className="w-full flex items-center gap-3 h-9 px-2.5 rounded-lg text-sm transition text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
-                    <circle cx="12" cy="8" r="3.5" />
-                    <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
-                  </svg>
-                  <span className="truncate">关于我</span>
-                </Link>
-              </div>
-            ) : (
-              <Link
-                to="/about"
-                title="关于我"
-                className="w-10 h-10 mx-auto mb-1 flex items-center justify-center rounded-lg transition text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
-              >
-                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
-                  <circle cx="12" cy="8" r="3.5" />
-                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
-                </svg>
-              </Link>
-            )}
-          </div>
-        )}
         {/* 版权署名 */}
         <div
           className={
