@@ -47,7 +47,7 @@
 .about-page .resume-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 50px; padding: 25px 0 72px; border-bottom: 1px solid var(--line); }
 .about-page .resume-hero h1 { font-size: clamp(3.8rem, 7vw, 6.8rem); line-height: 0.9; letter-spacing: -0.075em; margin-top: 18px; font-weight: 700; }
 .about-page .resume-hero > a { margin-top: 25px; }
-.about-page .resume-title { font-size: 22px; margin-top: 20px; }
+.about-page .resume-title { font-size: clamp(24px, 3.2vw, 36px); font-weight: 700; letter-spacing: -0.01em; margin-top: 20px; }
 .about-page .resume-lead { max-width: 800px; margin-top: 18px; color: #686862; font-size: 15px; line-height: 1.9; }
 
 .about-page .resume-section { padding: 54px 0; border-bottom: 1px solid var(--line); }
@@ -174,7 +174,7 @@
   .about-page .resume-page { padding-top: 24px; }
   .about-page .resume-hero { padding-bottom: 50px; }
   .about-page .resume-hero h1 { font-size: 4.2rem; }
-  .about-page .resume-title { font-size: 17px; }
+  .about-page .resume-title { font-size: 24px; }
   .about-page .resume-lead { font-size: 13px; }
   .about-page .resume-section { padding: 45px 0; }
   .about-page .basic-item { min-height: 88px; padding: 16px 18px; }
