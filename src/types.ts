@@ -144,6 +144,7 @@ export const DEFAULT_ABOUT: AboutData = {
     { label: '在校经历', value: '班长' },
     { label: '目前所在地', value: '济南' },
     { label: '目标城市', value: '杭州' },
+    { label: '电话', value: '13296409675（微信同号）' },
     { label: '工作年限', value: '9 年（设计 6 年 + 数字化产品 3 年）' },
     { label: '联系方式', value: '983047904@qq.com' },
     { label: '微信', value: 'MuYo0402' },
@@ -160,7 +161,7 @@ export const DEFAULT_ABOUT: AboutData = {
     {
       year: '2023.10–至今',
       company: '中益茶业（西双版纳）',
-      role: '产品设计负责人 → 品牌数字化负责人',
+      role: '产品负责人',
       city: '济南',
       bullets: [
         '入职初期负责旗下子品牌产品设计与内容生产，后因业务表现进入总公司，逐步承担产品创新、品牌内容与数字化升级工作。',
@@ -215,7 +216,7 @@ export const DEFAULT_ABOUT: AboutData = {
       ],
     },
     {
-      year: '2017.11–2018.11',
+      year: '2017.11–2018.12',
       company: '北斗正明科技发展有限公司',
       role: '电商视觉设计',
       city: '北京',
