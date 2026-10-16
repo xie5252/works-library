@@ -133,7 +133,7 @@ export interface AboutData {
 export const DEFAULT_ABOUT: AboutData = {
   name: '谢轲',
   title: '品牌数字化负责人 / 数字化产品 / 产品开发',
-  lead: '9 年跨领域实战经验，覆盖品牌视觉、产品开发、电商、供应链、业务系统与 AI。长期在实体企业一线，把真实问题转化为产品、流程与可使用的数字化工具。',
+  lead: '品牌视觉与内容出身，9 年把设计做到供应链落地，再用数字化和 AI 把整条链路重做一遍。长期扎在实体企业一线，把真实业务问题转化为产品、流程与可使用的数字化工具。',
   pdf_url: '/xie-ke-resume.pdf',
   contact_email: '983047904@qq.com',
   contact_wechat: 'MuYo0402',
