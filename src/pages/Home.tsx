@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { CircleUserRound } from 'lucide-react'
 import { api } from '../api'
 import type { Work, SiteSettings, Category } from '../types'
 import { FALLBACK_CATEGORIES } from '../types'
@@ -217,12 +218,9 @@ export default function Home() {
             open ? (
               <Link
                 to="/about"
-                className="mt-2.5 mb-1 w-full flex items-center gap-2.5 h-10 px-3 rounded-xl border border-neutral-200 bg-white text-sm text-neutral-600 hover:border-neutral-900 hover:text-neutral-900 transition"
+                className="mt-2.5 mb-1 w-full flex items-center gap-2.5 h-10 px-3 rounded-xl border border-neutral-200 bg-white text-sm font-bold text-neutral-900 hover:border-neutral-900 transition"
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
-                  <circle cx="12" cy="8" r="3.5" />
-                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
-                </svg>
+                <CircleUserRound size={18} strokeWidth={2.2} className="shrink-0" />
                 <span className="truncate">关于我</span>
                 <span className="ml-auto text-neutral-300 text-xs">→</span>
               </Link>
@@ -230,12 +228,9 @@ export default function Home() {
               <Link
                 to="/about"
                 title="关于我"
-                className="w-10 h-10 mx-auto mt-2.5 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-500 hover:border-neutral-900 hover:text-neutral-900 transition"
+                className="w-10 h-10 mx-auto mt-2.5 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:border-neutral-900 hover:text-neutral-900 transition"
               >
-                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round">
-                  <circle cx="12" cy="8" r="3.5" />
-                  <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
-                </svg>
+                <CircleUserRound size={19} strokeWidth={2.2} />
               </Link>
             )
           )}
