@@ -25,6 +25,8 @@ function normalize(raw: unknown): AboutData {
     pdf_url: o.pdf_url ?? d.pdf_url,
     contact_email: o.contact_email ?? d.contact_email,
     contact_wechat: o.contact_wechat ?? d.contact_wechat,
+    show_wechat: o.show_wechat ?? d.show_wechat,
+    mask_phone: o.mask_phone ?? d.mask_phone,
     personal: Array.isArray(o.personal) ? o.personal : d.personal,
     strengths: Array.isArray(o.strengths) ? o.strengths : d.strengths,
     jobs: Array.isArray(o.jobs) ? o.jobs : d.jobs,
@@ -68,6 +70,10 @@ export default function About() {
   }
   if (!about) return <Navigate to="/" replace />
   const a = about
+  // 安全开关：微信行可隐藏；电话自动打码（132****9675）
+  const visiblePersonal = a.personal
+    .filter((p) => a.show_wechat === '1' || p.label !== '微信')
+    .map((p) => (a.mask_phone === '1' ? { ...p, value: p.value.replace(/1[3-9]\d{9}/g, (m) => m.slice(0, 3) + '****' + m.slice(7)) } : p))
 
   return (
     <div className="about-page">
@@ -97,12 +103,12 @@ export default function About() {
         </header>
 
         {/* 01 个人信息 */}
-        {a.personal.length > 0 && (
+        {visiblePersonal.length > 0 && (
           <ScrollReveal>
             <section className="resume-section">
               <div className="resume-section-label"><span>01</span> 个人信息</div>
               <div className="basic-grid">
-                {a.personal.map((p, i) => (
+                {visiblePersonal.map((p, i) => (
                   <div className="basic-item" key={i}>
                     <span>{p.label}</span>
                     <strong>{p.value}</strong>

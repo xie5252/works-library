@@ -17,6 +17,8 @@ function normalize(raw: unknown): AboutData {
     pdf_url: o.pdf_url ?? d.pdf_url,
     contact_email: o.contact_email ?? d.contact_email,
     contact_wechat: o.contact_wechat ?? d.contact_wechat,
+    show_wechat: o.show_wechat ?? d.show_wechat,
+    mask_phone: o.mask_phone ?? d.mask_phone,
     personal: Array.isArray(o.personal) ? o.personal : d.personal,
     strengths: Array.isArray(o.strengths) ? o.strengths : d.strengths,
     jobs: Array.isArray(o.jobs) ? o.jobs : d.jobs,
@@ -184,13 +186,28 @@ export default function AboutEdit() {
           <Field label="简历 PDF 地址（留空隐藏下载按钮）">
             <input value={data.pdf_url} onChange={(e) => set('pdf_url', e.target.value)} className={inputCls} placeholder="/xie-ke-resume.pdf" />
           </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="邮箱">
-              <input value={data.contact_email} onChange={(e) => set('contact_email', e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="微信">
-              <input value={data.contact_wechat} onChange={(e) => set('contact_wechat', e.target.value)} className={inputCls} />
-            </Field>
+          <Field label="邮箱">
+            <input value={data.contact_email} onChange={(e) => set('contact_email', e.target.value)} className={inputCls} />
+          </Field>
+          <div className="flex flex-wrap gap-x-8 gap-y-2 pt-1">
+            <label className="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={data.show_wechat === '1'}
+                onChange={(e) => set('show_wechat', e.target.checked ? '1' : '0')}
+                className="w-4 h-4 accent-neutral-900"
+              />
+              显示微信行
+            </label>
+            <label className="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={data.mask_phone === '1'}
+                onChange={(e) => set('mask_phone', e.target.checked ? '1' : '0')}
+                className="w-4 h-4 accent-neutral-900"
+              />
+              电话自动打码（132****9675）
+            </label>
           </div>
         </Section>
 

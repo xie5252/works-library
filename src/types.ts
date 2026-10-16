@@ -119,6 +119,8 @@ export interface AboutData {
   pdf_url: string // 简历 PDF 下载地址，留空隐藏按钮
   contact_email: string
   contact_wechat: string
+  show_wechat: string // '1' 显示微信行 / '0' 隐藏（安全开关）
+  mask_phone: string // '1' 电话自动打码 / '0' 完整显示
   personal: AboutPersonalItem[]
   strengths: AboutStrength[]
   jobs: AboutJob[]
@@ -137,6 +139,8 @@ export const DEFAULT_ABOUT: AboutData = {
   pdf_url: '/xie-ke-resume.pdf',
   contact_email: '983047904@qq.com',
   contact_wechat: 'MuYo0402',
+  show_wechat: '0',
+  mask_phone: '1',
   personal: [
     { label: '姓名', value: '谢轲' },
     { label: '出生年份', value: '1996 年' },
