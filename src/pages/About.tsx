@@ -28,9 +28,7 @@ function normalize(raw: unknown): AboutData {
     personal: Array.isArray(o.personal) ? o.personal : d.personal,
     strengths: Array.isArray(o.strengths) ? o.strengths : d.strengths,
     jobs: Array.isArray(o.jobs) ? o.jobs : d.jobs,
-    featured: o.featured ?? d.featured,
     results: Array.isArray(o.results) ? o.results : d.results,
-    products: Array.isArray(o.products) ? o.products : d.products,
     skill_groups: Array.isArray(o.skill_groups) ? o.skill_groups : d.skill_groups,
     skills: Array.isArray(o.skills) ? o.skills : d.skills,
     field: o.field ?? d.field,
@@ -70,8 +68,6 @@ export default function About() {
   }
   if (!about) return <Navigate to="/" replace />
   const a = about
-  // 后台存的旧图片路径（/images/xxx.svg）兼容到 public 根路径
-  const productImg = (p: string) => (p.startsWith('/images/') ? p.replace('/images/', '/') : p)
 
   return (
     <div className="about-page">
@@ -157,14 +153,6 @@ export default function About() {
         <ScrollReveal>
           <section className="resume-section">
             <div className="resume-section-label"><span>04</span> 核心成果</div>
-            <div className="resume-featured-site">
-              <div>
-                <span className="eyebrow-small">CORE RESULT / PERSONAL SITE</span>
-                <h2>{a.featured.title}</h2>
-                <p>{a.featured.body}</p>
-              </div>
-              <Link to="/" className="pill-black">查看作品 ↗</Link>
-            </div>
             <div className="resume-results">
               {a.results.map((r, i) => (
                 <div key={i}>
@@ -177,26 +165,6 @@ export default function About() {
             <div className="resume-core-links">
               <Link to="/" className="pill-black">查看全部作品 ↗</Link>
             </div>
-            {a.products.length > 0 && (
-              <div className="resume-personal-products">
-                <div className="resume-subheading">
-                  <span>个人产品 / 独立开发</span>
-                  <small>把产品能力延伸到企业之外</small>
-                </div>
-                <div className="resume-product-grid">
-                  {a.products.map((p, i) => (
-                    <Link to="/" key={i} className="resume-product-card">
-                      <div className="resume-product-image"><img src={productImg(p.image)} alt={p.title} /></div>
-                      <div>
-                        <p>{p.year} · {p.role}</p>
-                        <h3>{p.title}</h3>
-                        <span>{p.metric}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </section>
         </ScrollReveal>
 

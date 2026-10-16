@@ -104,13 +104,6 @@ export interface AboutResult {
   label: string
   note: string
 }
-export interface AboutProduct {
-  year: string
-  role: string
-  title: string
-  metric: string
-  image: string
-}
 export interface AboutSkillGroup {
   title: string
   items: string[]
@@ -129,9 +122,7 @@ export interface AboutData {
   personal: AboutPersonalItem[]
   strengths: AboutStrength[]
   jobs: AboutJob[]
-  featured: { title: string; body: string }
   results: AboutResult[]
-  products: AboutProduct[]
   skill_groups: AboutSkillGroup[]
   skills: AboutSkill[]
   field: { title: string; body: string; tags: string[] }
@@ -235,10 +226,6 @@ export const DEFAULT_ABOUT: AboutData = {
       ],
     },
   ],
-  featured: {
-    title: '作品库（本站）',
-    body: '从视觉设计、信息架构到开发、部署、HTTPS 与备案，独立把个人作品与简历做成真正可运行的数字产品。',
-  },
   results: [
     { value: '1000+', label: '年均上新产品', note: '产品开发、包装、摄影与视频内容持续协同。' },
     { value: '95%', label: '在售包装独立设计', note: '覆盖纸盒、木盒、瓷罐、简装、纸箱与包装袋等。' },
@@ -246,11 +233,6 @@ export const DEFAULT_ABOUT: AboutData = {
     { value: '10% → ≈0', label: '订单漏单率', note: '通过订单、库存与任务状态关联减少遗漏。' },
     { value: '10–20% → 80%+', label: '礼品茶业务占比', note: '参与产品组合、包装与内容表达的业务转型。' },
     { value: '3 套', label: '自研企业业务系统', note: '报价单、销售管理、综合管理，从工具逐步形成平台。' },
-  ],
-  products: [
-    { year: '2026', role: '独立开发', title: '本地记账 APP', metric: '本地数据 / 稳定自用数月', image: '/app-bookkeeping.svg' },
-    { year: '2026', role: '独立开发', title: '本地密码库 APP', metric: '本地加密 / 指纹人脸', image: '/app-password.svg' },
-    { year: '2026–至今', role: 'UI / AI 辅助开发', title: '微信小游戏｜农场', metric: 'Cocos 3.8.8', image: '/app-farm.svg' },
   ],
   skill_groups: [
     { title: '设计与内容', items: ['Photoshop（精通）', 'Illustrator（精通）', 'Premiere Pro', 'After Effects', 'Cinema 4D', '商业摄影', '视频拍摄与剪辑'] },

@@ -155,7 +155,7 @@
 /* 响应式（与原项目一致） */
 @media (max-width: 850px) {
   .about-page .resume-hero { display: block; }
-  .about-page .resume-hero > a { margin-top: 25px; display: inline-block; }
+  .about-page .resume-hero > a { display: none; }
   .about-page .basic-grid, .about-page .strength-grid, .about-page .resume-results, .about-page .skill-panel { grid-template-columns: 1fr; }
   .about-page .resume-job-trigger { grid-template-columns: 1fr 28px; gap: 10px; }
   .about-page .resume-job-time { grid-column: 1; }

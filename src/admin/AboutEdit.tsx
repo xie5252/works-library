@@ -20,9 +20,7 @@ function normalize(raw: unknown): AboutData {
     personal: Array.isArray(o.personal) ? o.personal : d.personal,
     strengths: Array.isArray(o.strengths) ? o.strengths : d.strengths,
     jobs: Array.isArray(o.jobs) ? o.jobs : d.jobs,
-    featured: o.featured ?? d.featured,
     results: Array.isArray(o.results) ? o.results : d.results,
-    products: Array.isArray(o.products) ? o.products : d.products,
     skill_groups: Array.isArray(o.skill_groups) ? o.skill_groups : d.skill_groups,
     skills: Array.isArray(o.skills) ? o.skills : d.skills,
     field: o.field ?? d.field,
@@ -343,26 +341,6 @@ export default function AboutEdit() {
           </div>
         </Section>
 
-        <Section title="04 核心成果 · 焦点卡">
-          <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3">
-            <Field label="卡片标题">
-              <input
-                value={data.featured.title}
-                onChange={(e) => set('featured', { ...data.featured, title: e.target.value })}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="说明">
-              <input
-                value={data.featured.body}
-                onChange={(e) => set('featured', { ...data.featured, body: e.target.value })}
-                className={inputCls}
-              />
-            </Field>
-          </div>
-          <p className="text-xs text-neutral-400">卡片右侧按钮固定为「查看作品 ↗」，跳回作品首页</p>
-        </Section>
-
         <Section title="04 核心成果 · 数据格" hint="三列大数字卡片">
           <div className="space-y-2">
             {data.results.map((r, i) => (
@@ -395,58 +373,6 @@ export default function AboutEdit() {
             ))}
             <button type="button" onClick={() => set('results', [...data.results, { value: '', label: '', note: '' }])} className={addBtn}>
               + 添加数据
-            </button>
-          </div>
-        </Section>
-
-        <Section title="04 个人产品 / 独立开发" hint="三张卡片；图片填站点内地址，如 /app-bookkeeping.svg（已内置三张默认图）">
-          <div className="space-y-2">
-            {data.products.map((p, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  value={p.title}
-                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-40 shrink-0 font-medium'}
-                  placeholder="名称"
-                />
-                <input
-                  value={p.year}
-                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-24 shrink-0'}
-                  placeholder="年份"
-                />
-                <input
-                  value={p.role}
-                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-32 shrink-0'}
-                  placeholder="角色"
-                />
-                <input
-                  value={p.metric}
-                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, metric: e.target.value } : x)))}
-                  className={inputCls}
-                  placeholder="亮点"
-                />
-                <input
-                  value={p.image}
-                  onChange={(e) => set('products', data.products.map((x, j) => (j === i ? { ...x, image: e.target.value } : x)))}
-                  className={inputCls + ' sm:w-44 shrink-0'}
-                  placeholder="图片地址"
-                />
-                <ItemOps
-                  index={i}
-                  total={data.products.length}
-                  onMove={(from, to) => set('products', move(data.products, from, to))}
-                  onRemove={() => set('products', data.products.filter((_, j) => j !== i))}
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => set('products', [...data.products, { year: '', role: '', title: '', metric: '', image: '' }])}
-              className={addBtn}
-            >
-              + 添加产品
             </button>
           </div>
         </Section>
