@@ -145,6 +145,7 @@ export const DEFAULT_ABOUT: AboutData = {
     { label: '目前所在地', value: '济南' },
     { label: '目标城市', value: '杭州' },
     { label: '期望职位', value: '品牌数字化负责人 / 数字化产品经理 / 产品开发经理 / 品牌中台运营' },
+    { label: '工作年限', value: '9 年（设计 6 年 + 数字化产品 3 年）' },
     { label: '联系方式', value: '983047904@qq.com' },
     { label: '微信', value: 'MuYo0402' },
   ],
