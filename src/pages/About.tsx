@@ -86,7 +86,6 @@ export default function About() {
         <header className="resume-hero reveal">
           <div>
             <p className="eyebrow">RESUME / 综合简历</p>
-            <h1>{a.name}</h1>
             <p className="resume-title">{a.title}</p>
             <p className="resume-lead">{a.lead}</p>
           </div>
