@@ -362,7 +362,7 @@ export default function WorkDetail() {
                 />
               ))}
             </div>
-            <p className={'text-xs mt-16 ' + (dark ? 'text-neutral-500' : 'text-neutral-400')}>
+            <p className={'text-xs mt-16 text-center ' + (dark ? 'text-neutral-500' : 'text-neutral-400')}>
               © {new Date().getFullYear()} {settings.site_name} · 原创作品，未经授权请勿转载
             </p>
           </div>
