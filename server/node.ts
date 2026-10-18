@@ -4,6 +4,7 @@
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import path from 'node:path'
+import { createRequire } from 'node:module'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { Readable } from 'node:stream'
@@ -43,7 +44,47 @@ if (!secret) {
     m.exec('ALTER TABLE stats_daily ADD COLUMN uv INTEGER NOT NULL DEFAULT 0')
     console.log('[迁移] stats_daily 已添加 uv 列')
   }
+  m.exec(`CREATE TABLE IF NOT EXISTS stats_geo (
+     date TEXT NOT NULL,
+     region TEXT NOT NULL,
+     views INTEGER NOT NULL DEFAULT 0,
+     PRIMARY KEY (date, region)
+   )`)
+  m.exec(`CREATE TABLE IF NOT EXISTS visit_log (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     ts TEXT NOT NULL,
+     region TEXT NOT NULL,
+     slug TEXT NOT NULL,
+     title TEXT NOT NULL DEFAULT ''
+   )`)
   m.close()
+}
+
+// IP → 地区（ip2region 离线库，库文件随 npm 包自带）
+let geo: ((ip: string) => string) | null = null
+try {
+  const nodeRequire = createRequire(import.meta.url)
+  const IP2Region = (nodeRequire('ip2region').default ?? nodeRequire('ip2region')) as new (o: { dbPath: string }) => {
+    search: (ip: string) => { country: string; province: string; city: string }
+  }
+  const dbFile = nodeRequire.resolve('ip2region').replace(/[/\\]dist[/\\]lib[/\\]index\.js$/, '') + '/data/ip2region.db'
+  const searcher = new IP2Region({ dbPath: dbFile })
+  geo = (ip: string) => {
+    try {
+      const r = searcher.search(ip)
+      if (!r) return '未知'
+      if (!r.country) return r.city === '内网IP' ? '内网' : r.city || '内网' // 内网 IP
+      if (r.country !== '中国') return r.country
+      const prov = r.province.replace(/(省|自治区|特别行政区|市)$/u, '')
+      const city = r.city.replace(/市$/u, '')
+      return city && city !== prov ? `${prov} ${city}` : prov || r.country
+    } catch {
+      return '未知'
+    }
+  }
+  console.log('[geo] ip2region 就绪')
+} catch (e) {
+  console.warn('[geo] ip2region 初始化失败，地区统计不可用:', e instanceof Error ? e.message : e)
 }
 
 const env = {
@@ -51,6 +92,7 @@ const env = {
   MEDIA: new LocalR2(mediaDir),
   SECRET: secret,
   COOKIE_SECURE: process.env.COOKIE_SECURE ?? '1',
+  GEO: geo ?? undefined,
 } as unknown as Env
 
 const app = new Hono<{ Bindings: Env }>()

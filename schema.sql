@@ -23,6 +23,21 @@ CREATE TABLE IF NOT EXISTS stats_daily (
   views INTEGER NOT NULL DEFAULT 0,
   uv INTEGER NOT NULL DEFAULT 0
 );
+-- 每日×地区 浏览汇总（region = 省 市，IP 离线库解析，不存原始 IP）
+CREATE TABLE IF NOT EXISTS stats_geo (
+  date TEXT NOT NULL,
+  region TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (date, region)
+);
+-- 最近访问日志（只留最近 500 条，只记地区不记 IP）
+CREATE TABLE IF NOT EXISTS visit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  region TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT

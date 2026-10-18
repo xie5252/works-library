@@ -11,6 +11,8 @@ interface StatsData {
   avg_views: number
   trend: { date: string; views: number; uv: number }[]
   top: { slug: string; title: string; views: number }[]
+  geo: { region: string; views: number }[]
+  recent: { ts: string; region: string; slug: string; title: string }[]
 }
 
 const fmt = (n: number) => n.toLocaleString('zh-CN')
@@ -100,9 +102,15 @@ export default function AdminStats() {
       ]
     : []
   const topMax = data && data.top.length > 0 ? Math.max(...data.top.map((t) => t.views), 1) : 1
+  const geoMax = data && data.geo.length > 0 ? Math.max(...data.geo.map((g) => g.views), 1) : 1
+  const fmtTime = (ts: string) => {
+    const d = new Date(ts)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-5xl mx-auto">
       <ToastContainer items={items} />
       <h1 className="text-2xl font-bold tracking-tight">数据面板</h1>
       <p className="text-xs text-neutral-400 mt-1">浏览量 PV = 详情页访问次数；访客数 UV = 按浏览器去重（cookie，一年有效）</p>
@@ -155,6 +163,45 @@ export default function AdminStats() {
                 ))}
               </ol>
             )}
+          </div>
+
+          {/* 地区分布 + 最近访问 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4 items-start">
+            <div className="rounded-xl border border-neutral-200 bg-white p-4">
+              <p className="text-sm font-semibold">访客地区分布</p>
+              {data.geo.length === 0 ? (
+                <p className="text-xs text-neutral-400 mt-4">还没有地区数据（上线后开始记录）</p>
+              ) : (
+                <ol className="mt-3 space-y-2.5">
+                  {data.geo.map((g, i) => (
+                    <li key={g.region} className="flex items-center gap-3">
+                      <span className={'w-6 text-center text-sm font-bold ' + (i < 3 ? 'text-neutral-900' : 'text-neutral-300')}>{i + 1}</span>
+                      <span className="w-28 shrink-0 truncate text-sm text-neutral-700">{g.region}</span>
+                      <div className="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden">
+                        <div className="h-full rounded-full bg-neutral-900" style={{ width: `${Math.max((g.views / geoMax) * 100, 2)}%` }} />
+                      </div>
+                      <span className="w-14 text-right text-sm tabular-nums text-neutral-500">{fmt(g.views)}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+            <div className="rounded-xl border border-neutral-200 bg-white p-4">
+              <p className="text-sm font-semibold">最近访问</p>
+              {data.recent.length === 0 ? (
+                <p className="text-xs text-neutral-400 mt-4">还没有访问记录（上线后开始记录）</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {data.recent.map((r, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <span className="text-neutral-400 tabular-nums shrink-0">{fmtTime(r.ts)}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-xs text-neutral-600 shrink-0">{r.region}</span>
+                      <span className="truncate text-neutral-700">看了「{r.title}」</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </>
       )}

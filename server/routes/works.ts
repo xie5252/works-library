@@ -88,7 +88,7 @@ works.get('/works/:slug', async (c) => {
     c.req.param('slug'),
   )
   if (!r) return c.json({ error: '作品不存在' }, 404)
-  // 浏览统计：详情每访问一次 PV+1；cookie 去重 UV（同一天同一浏览器只算 1 个访客，cookie 一年有效）
+  // 浏览统计：详情每访问一次 PV+1；cookie 去重 UV；记录访客地区（IP 离线库解析，不存原始 IP）
   let views = r.views ?? 0
   try {
     // 东八区日期，避免 UTC 导致晚间访问记到前一天
@@ -101,6 +101,19 @@ works.get('/works/:slug', async (c) => {
         sameSite: 'Lax',
       })
     }
+    // 地区：CF 用 request.cf，node 用 ip2region（nginx 已转发 X-Real-IP）
+    let region = '未知'
+    try {
+      const cf = (c.req.raw as unknown as { cf?: { country?: string; city?: string } }).cf
+      if (cf?.country) region = cf.city ? `${cf.country} ${cf.city}` : cf.country
+      else if (c.env.GEO) {
+        const xff = c.req.header('x-forwarded-for')
+        const ip = (xff ? xff.split(',')[0].trim() : '') || c.req.header('x-real-ip') || ''
+        if (ip) region = c.env.GEO(ip)
+      }
+    } catch {
+      // 地区解析失败不影响统计
+    }
     await qRun(c.env.DB, 'UPDATE works SET views = COALESCE(views, 0) + 1 WHERE id=?', r.id)
     await qRun(
       c.env.DB,
@@ -110,6 +123,16 @@ works.get('/works/:slug', async (c) => {
       isNewVisitor ? 1 : 0,
       isNewVisitor ? 1 : 0,
     )
+    await qRun(
+      c.env.DB,
+      `INSERT INTO stats_geo (date, region, views) VALUES (?, ?, 1)
+       ON CONFLICT(date, region) DO UPDATE SET views = views + 1`,
+      date,
+      region,
+    )
+    await qRun(c.env.DB, 'INSERT INTO visit_log (ts, region, slug, title) VALUES (?, ?, ?, ?)', now(), region, r.slug, r.title)
+    // 日志只留最近 500 条
+    await qRun(c.env.DB, 'DELETE FROM visit_log WHERE id <= (SELECT MAX(id) FROM visit_log) - 500')
     views += 1
   } catch {
     // 统计失败静默
@@ -151,6 +174,16 @@ works.get('/admin/stats', requireAuth, async (c) => {
     c.env.DB,
     "SELECT slug, title, COALESCE(views, 0) AS views FROM works WHERE deleted_at IS NULL AND status='published' ORDER BY views DESC, updated_at DESC LIMIT 10",
   )
+  const [geo, recent] = await Promise.all([
+    qAll<{ region: string; views: number }>(
+      c.env.DB,
+      'SELECT region, SUM(views) AS views FROM stats_geo GROUP BY region ORDER BY views DESC LIMIT 8',
+    ),
+    qAll<{ ts: string; region: string; slug: string; title: string }>(
+      c.env.DB,
+      'SELECT ts, region, slug, title FROM visit_log ORDER BY id DESC LIMIT 15',
+    ),
+  ])
   const worksCount = countRow?.v ?? 0
   return c.json({
     total_views: total?.v ?? 0,
@@ -161,6 +194,8 @@ works.get('/admin/stats', requireAuth, async (c) => {
     avg_views: worksCount > 0 ? Math.round((total?.v ?? 0) / worksCount) : 0,
     trend,
     top,
+    geo,
+    recent,
   })
 })
 

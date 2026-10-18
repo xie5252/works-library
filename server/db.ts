@@ -7,6 +7,8 @@ export interface Env {
   MEDIA: R2Bucket
   SECRET: string
   COOKIE_SECURE?: string
+  // node 运行时注入：IP → 地区文本（CF 走 request.cf，不用这个）
+  GEO?: (ip: string) => string
 }
 
 export type AppContext = Context<{ Bindings: Env }>
