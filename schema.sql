@@ -17,10 +17,11 @@ CREATE TABLE IF NOT EXISTS works (
   views INTEGER NOT NULL DEFAULT 0,
   deleted_at TEXT
 );
--- 每日浏览汇总（date = YYYY-MM-DD，东八区）
+-- 每日浏览汇总（date = YYYY-MM-DD，东八区；uv = 独立访客，cookie 去重）
 CREATE TABLE IF NOT EXISTS stats_daily (
   date TEXT PRIMARY KEY,
-  views INTEGER NOT NULL DEFAULT 0
+  views INTEGER NOT NULL DEFAULT 0,
+  uv INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,

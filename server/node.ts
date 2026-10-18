@@ -34,9 +34,15 @@ if (!secret) {
   m.exec(
     `CREATE TABLE IF NOT EXISTS stats_daily (
        date TEXT PRIMARY KEY,
-       views INTEGER NOT NULL DEFAULT 0
+       views INTEGER NOT NULL DEFAULT 0,
+       uv INTEGER NOT NULL DEFAULT 0
      )`,
   )
+  const sCols = m.pragma('table_info(stats_daily)') as { name: string }[]
+  if (Array.isArray(sCols) && sCols.length > 0 && !sCols.some((c) => c.name === 'uv')) {
+    m.exec('ALTER TABLE stats_daily ADD COLUMN uv INTEGER NOT NULL DEFAULT 0')
+    console.log('[迁移] stats_daily 已添加 uv 列')
+  }
   m.close()
 }
 

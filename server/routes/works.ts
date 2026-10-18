@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCookie, setCookie } from 'hono/cookie'
 import { qAll, qGet, qRun, now, type WorkRow, type Env } from '../db'
 import { requireAuth } from './auth'
 
@@ -87,17 +88,27 @@ works.get('/works/:slug', async (c) => {
     c.req.param('slug'),
   )
   if (!r) return c.json({ error: '作品不存在' }, 404)
-  // 浏览统计：详情每访问一次 +1（失败不影响正常访问）
+  // 浏览统计：详情每访问一次 PV+1；cookie 去重 UV（同一天同一浏览器只算 1 个访客，cookie 一年有效）
   let views = r.views ?? 0
   try {
     // 东八区日期，避免 UTC 导致晚间访问记到前一天
     const date = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+    const isNewVisitor = !getCookie(c, 'vuid')
+    if (isNewVisitor) {
+      setCookie(c, 'vuid', crypto.randomUUID(), {
+        path: '/',
+        maxAge: 365 * 24 * 3600,
+        sameSite: 'Lax',
+      })
+    }
     await qRun(c.env.DB, 'UPDATE works SET views = COALESCE(views, 0) + 1 WHERE id=?', r.id)
     await qRun(
       c.env.DB,
-      `INSERT INTO stats_daily (date, views) VALUES (?, 1)
-       ON CONFLICT(date) DO UPDATE SET views = views + 1`,
+      `INSERT INTO stats_daily (date, views, uv) VALUES (?, 1, ?)
+       ON CONFLICT(date) DO UPDATE SET views = views + 1, uv = uv + ?`,
       date,
+      isNewVisitor ? 1 : 0,
+      isNewVisitor ? 1 : 0,
     )
     views += 1
   } catch {
@@ -106,16 +117,51 @@ works.get('/works/:slug', async (c) => {
   return c.json({ ...parseRow(r), views })
 })
 
-// 浏览汇总（后台）：总浏览 + 今日浏览
+// 数据面板（后台）：汇总卡 + 近 30 天趋势 + 作品浏览 TOP10
 works.get('/admin/stats', requireAuth, async (c) => {
   const date = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10)
-  const total = await qGet<{ v: number }>(c.env.DB, 'SELECT COALESCE(SUM(views), 0) AS v FROM works')
-  const today = await qGet<{ v: number }>(
+  const start = new Date(Date.now() + 8 * 3600 * 1000 - 29 * 86400 * 1000).toISOString().slice(0, 10)
+  const [total, todayRow, countRow, uvTotal] = await Promise.all([
+    qGet<{ v: number }>(c.env.DB, 'SELECT COALESCE(SUM(views), 0) AS v FROM works'),
+    qGet<{ views: number; uv: number }>(
+      c.env.DB,
+      'SELECT views, uv FROM stats_daily WHERE date=?',
+      date,
+    ),
+    qGet<{ v: number }>(
+      c.env.DB,
+      "SELECT COUNT(*) AS v FROM works WHERE deleted_at IS NULL AND status='published'",
+    ),
+    qGet<{ v: number }>(c.env.DB, 'SELECT COALESCE(SUM(uv), 0) AS v FROM stats_daily'),
+  ])
+  // 近 30 天趋势：缺数据的日期补 0
+  const rows = await qAll<{ date: string; views: number; uv: number }>(
     c.env.DB,
-    'SELECT views AS v FROM stats_daily WHERE date=?',
-    date,
+    'SELECT date, views, uv FROM stats_daily WHERE date >= ? ORDER BY date',
+    start,
   )
-  return c.json({ total_views: total?.v ?? 0, today_views: today?.v ?? 0 })
+  const byDate = new Map(rows.map((r) => [r.date, r]))
+  const trend: { date: string; views: number; uv: number }[] = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() + 8 * 3600 * 1000 - i * 86400 * 1000).toISOString().slice(0, 10)
+    const r = byDate.get(d)
+    trend.push({ date: d, views: r?.views ?? 0, uv: r?.uv ?? 0 })
+  }
+  const top = await qAll<{ slug: string; title: string; views: number }>(
+    c.env.DB,
+    "SELECT slug, title, COALESCE(views, 0) AS views FROM works WHERE deleted_at IS NULL AND status='published' ORDER BY views DESC, updated_at DESC LIMIT 10",
+  )
+  const worksCount = countRow?.v ?? 0
+  return c.json({
+    total_views: total?.v ?? 0,
+    today_views: todayRow?.views ?? 0,
+    today_uv: todayRow?.uv ?? 0,
+    total_uv: uvTotal?.v ?? 0,
+    works_count: worksCount,
+    avg_views: worksCount > 0 ? Math.round((total?.v ?? 0) / worksCount) : 0,
+    trend,
+    top,
+  })
 })
 
 // ---------- 后台接口（含草稿） ----------

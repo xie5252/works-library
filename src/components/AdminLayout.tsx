@@ -11,13 +11,15 @@ export default function AdminLayout() {
   const location = useLocation()
   const { items, show } = useToasts()
 
-  const active: 'works' | 'settings' | 'trash' | 'about' = location.pathname.startsWith('/admin/trash')
+  const active: 'works' | 'stats' | 'settings' | 'trash' | 'about' = location.pathname.startsWith('/admin/trash')
     ? 'trash'
     : location.pathname.startsWith('/admin/settings')
       ? 'settings'
       : location.pathname.startsWith('/admin/about')
         ? 'about'
-        : 'works'
+        : location.pathname.startsWith('/admin/stats')
+          ? 'stats'
+          : 'works'
 
   useEffect(() => {
     api<SiteSettings>('/api/admin/settings').then(setSettings).catch(() => {})
@@ -61,6 +63,9 @@ export default function AdminLayout() {
           <nav className="flex items-center gap-1 text-sm shrink-0">
             <Link to="/admin" className={navCls(active === 'works')}>
               作品管理
+            </Link>
+            <Link to="/admin/stats" className={navCls(active === 'stats')}>
+              数据
             </Link>
             <Link to="/admin/trash" className={navCls(active === 'trash')}>
               回收站
