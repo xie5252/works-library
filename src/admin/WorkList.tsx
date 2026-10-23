@@ -267,7 +267,7 @@ function ListRow({
   onRemove: (w: Work) => void
 }) {
   return (
-    <li className="flex items-center gap-4 px-4 sm:px-6 py-4">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-4">
       <div className="w-16 h-12 rounded-lg bg-neutral-100 overflow-hidden shrink-0 flex items-center justify-center">
         {coverOf(w) ? (
           <img src={coverOf(w) || undefined} alt="" className="w-full h-full object-cover" />
@@ -275,7 +275,7 @@ function ListRow({
           <span className="text-neutral-300 text-lg font-bold">{w.title.slice(0, 1)}</span>
         )}
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 min-w-[150px]">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-sm truncate">{w.title}</h3>
           <span
@@ -289,11 +289,11 @@ function ListRow({
             {w.status === 'published' ? '已发布' : '草稿'}
           </span>
         </div>
-        <p className="text-xs text-neutral-400 mt-1">
+        <p className="text-xs text-neutral-400 mt-1 truncate">
           {(w.categories && w.categories.length > 0 ? w.categories : [w.category]).join(' / ')} · 浏览 {w.views ?? 0} · 更新于 {formatDateTime(w.updated_at)}
         </p>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 ml-auto">
         <button
           onClick={() => onToggle(w)}
           title={w.featured_order ? '取消精选' : '设为精选'}

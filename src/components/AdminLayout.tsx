@@ -50,7 +50,8 @@ export default function AdminLayout() {
       <AdminNoindex />
       <ToastContainer items={items} />
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-neutral-200">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-14 flex items-center gap-4 sm:gap-6">
+        {/* 手机端：头部内部横向滚动（隐藏滚动条），不撑破页面 */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 h-14 flex items-center gap-3 sm:gap-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link to="/admin" className="flex items-center gap-2.5 shrink-0 whitespace-nowrap">
             {settings.logo && (
               <img src={settings.logo} alt="logo" className="h-7 w-auto object-contain" />
